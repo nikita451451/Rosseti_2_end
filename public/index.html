@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет - Россети</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <!-- Шапка -->
+    <header class="header">
+        <div class="header__logo">
+            <img src="images/logo.png" alt="Логотип Россети">
+        </div>
+        <nav class="header__nav">
+            <ul>
+                <li><a href="index.html">Главная</a></li>
+                <li><a href="about.html">О компании</a></li>
+                <li><a href="#">Услуги</a></li>
+                <li><a href="#">Контакты</a></li>
+            </ul>
+        </nav>
+        <div class="header__auth">
+            <a href="login.html" class="btn btn-primary">Войти</a>
+            <a href="register.html" class="btn btn-primary">Регистрация</a>
+            </div>
+        </div>
+        <div class="mobile-menu-toggle">
+            <i class="fas fa-bars"></i>
+        </div>
+    </header>
+
+    <!-- Контент -->
+    <div class="container">
+        <div class="sidebar">
+            <div class="user-info">
+                <div class="avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <h3 id="sidebarUserName">Гость</h3>
+                <p id="sidebarUserEmail">Не авторизован</p>
+            </div>
+            
+            <h2>Меню</h2>
+            <ul>
+                <li><a href="#" onclick="showContent('home')" class="active"><i class="fas fa-home"></i> Личный кабинет</a></li>
+                <li><a href="#" onclick="showContent('profile')"><i class="fas fa-user"></i> Профиль</a></li>
+                <li><a href="#" onclick="showContent('submitReadings')"><i class="fas fa-tachometer-alt"></i> Подать показания</a></li>
+                <li><a href="#" onclick="showContent('meters')"><i class="fas fa-bolt"></i> Приборы учёта</a></li>
+                <li><a href="#" onclick="showContent('checkIPU')"><i class="fas fa-search"></i> Проверка ИПУ</a></li>
+                <li><a href="#" onclick="showContent('history')"><i class="fas fa-history"></i> История начислений</a></li>
+                <li><a href="#" onclick="showContent('receipt')"><i class="fas fa-file-invoice"></i> Квитанции</a></li>
+                <li><a href="#" onclick="showContent('certificate')"><i class="fas fa-file-alt"></i> Справки</a></li>
+            </ul>
+        </div>
+
+        <div class="main-content" id="main-content">
+            <!-- Контент по умолчанию (приветствие) -->
+            <div id="home-content" class="content-section">
+                <h2>Добро пожаловать в личный кабинет</h2>
+                <div class="alert info">
+                    <i class="fas fa-info-circle"></i> Для доступа ко всем функциям войдите в систему.
+                </div>
+                
+                <div class="quick-actions">
+                    <div class="action-card" onclick="showContent('submitReadings')">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Подать показания</span>
+                    </div>
+                    <div class="action-card" onclick="showContent('receipt')">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Мои квитанции</span>
+                    </div>
+                    <div class="action-card" onclick="showContent('history')">
+                        <i class="fas fa-history"></i>
+                        <span>История платежей</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Другие разделы (изначально скрыты) -->
+            <div id="profile-content" class="content-section" style="display: none;">
+                <!-- Контент профиля -->
+            </div>
+            
+            <div id="submitReadings-content" class="content-section" style="display: none;">
+                <!-- Контент подачи показаний -->
+            </div>
+            
+            <!-- ... другие разделы ... -->
+        </div>
+    </div>
+    <!-- Подвал -->
+    <footer class="footer">
+        <div class="footer__info">
+            <p>© 2025 Россети. Все права защищены.</p>
+            <p>Адрес: Москва, ул. Примерная, д. 1</p>
+            <p>Телефон: +7 (495) 123-45-67</p>
+        </div>
+        <div class="footer__links">
+            <a href="#"><i class="fas fa-shield-alt"></i> Политика конфиденциальности</a>
+            <a href="#"><i class="fas fa-file-contract"></i> Условия использования</a>
+            <a href="#"><i class="fas fa-phone"></i> Контакты</a>
+        </div>
+    </footer>
+</body>
+</html>

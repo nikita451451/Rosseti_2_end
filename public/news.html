@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новости | Россети</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header__logo">
+            <img src="images/logo.png" alt="Логотип Россети">
+        </div>
+        <nav class="header__nav">
+            <ul>
+                <li><a href="index.html">Главная</a></li>
+                <li><a href="about.html">О компании</a></li>
+                <li><a href="services.html">Услуги</a></li>
+                <li><a href="news.html" class="active">Новости</a></li>
+            </ul>
+        </nav>
+        <div class="header__auth">
+            <button id="loginBtn">Войти</button>
+            <button id="registerBtn">Регистрация</button>
+        </div>
+    </header>
+
+    <main class="news-main">
+        <section class="news-hero">
+            <h1>Новости компании</h1>
+            <p>Актуальные события и последние обновления</p>
+        </section>
+
+        <section class="news-filters">
+            <div class="filter-group">
+                <label for="category">Категория:</label>
+                <select id="category">
+                    <option value="all">Все новости</option>
+                    <option value="events">События</option>
+                    <option value="innovations">Инновации</option>
+                    <option value="partners">Партнерство</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="year">Год:</label>
+                <select id="year">
+                    <option value="2023">2023</option>
+                    <option value="2022">2022</option>
+                    <option value="2021">2021</option>
+                </select>
+            </div>
+        </section>
+
+        <section class="news-grid">
+            <article class="news-card">
+                <div class="news-image">
+                    <img src="images/news1.jpg" alt="Новость 1">
+                    <span class="news-category">Инновации</span>
+                </div>
+                <div class="news-content">
+                    <time datetime="2023-05-15">15 мая 2023</time>
+                    <h3>Внедрение новых технологий Smart Grid</h3>
+                    <p>Компания Россети начала масштабное внедрение интеллектуальных систем учета электроэнергии...</p>
+                    <a href="news-detail.html" class="read-more">Читать далее →</a>
+                </div>
+            </article>
+
+            <article class="news-card">
+                <div class="news-image">
+                    <img src="images/news2.jpg" alt="Новость 2">
+                    <span class="news-category">События</span>
+                </div>
+                <div class="news-content">
+                    <time datetime="2023-04-28">28 апреля 2023</time>
+                    <h3>Форум "Энергетика будущего"</h3>
+                    <p>Наши специалисты приняли участие в ежегодном международном форуме...</p>
+                    <a href="news-detail.html" class="read-more">Читать далее →</a>
+                </div>
+            </article>
+
+            <article class="news-card">
+                <div class="news-image">
+                    <img src="images/news3.jpg" alt="Новость 3">
+                    <span class="news-category">Партнерство</span>
+                </div>
+                <div class="news-content">
+                    <time datetime="2023-03-10">10 марта 2023</time>
+                    <h3>Сотрудничество с ведущими вузами</h3>
+                    <p>Подписаны соглашения о сотрудничестве с техническими университетами...</p>
+                    <a href="news-detail.html" class="read-more">Читать далее →</a>
+                </div>
+            </article>
+        </section>
+
+        <section class="news-pagination">
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">3</button>
+            <button class="page-btn next">Следующая →</button>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <!-- Футер как в других страницах -->
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
