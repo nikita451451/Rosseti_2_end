@@ -242,6 +242,16 @@ async function apiRequest(endpoint, method = 'GET', data = null, token = null) {
   
   return response;
 }
+document.getElementById("forgotPasswordForm").addEventListener("submit", function(event) {
+    event.preventDefault(); // Предотвращаем перезагрузку страницы
+    
+    const email = document.getElementById("email").value;
+    
+    // Здесь можно добавить AJAX-запрос к вашему серверу
+    console.log("Password reset requested for:", email);
+    
+    alert("If the email exists, a password reset link has been sent to " + email);
+});
 
 // ЗАПУСК ПРИЛОГИЖЕНИЯ
 document.addEventListener('DOMContentLoaded', init)});
