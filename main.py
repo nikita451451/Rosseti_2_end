@@ -12,7 +12,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # Настройки
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/rosseti_db")
+DATABASE_URL = os.getenv("DATABASE_URL = postgresql://postgres:123@localhost:5433/rosseti_db")
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 часа
