@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Услуги компании | Россети</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header__logo">
+            <img src="images/logo.png" alt="Логотип Россети">
+        </div>
+        <nav class="header__nav">
+            <ul>
+                <li><a href="/">Главная </a></li>
+                <li><a href="/about">О компании</a></li>
+                <li><a href="/services"class="active">Услуги</a></li>
+                <li><a href="/news">Новости</a></li>
+            </ul>
+        </nav>
+        <div class="header__auth">
+            <button onclick="location.href='/login'">Войти</button>
+            <button onclick="location.href='/register'">Регистрация</button>
+            <div id="userPanel" style="display: none;">
+                <span id="userName"></span>
+                <button onclick="logout()">Выйти</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="services-main">
+        <section class="services-hero">
+            <h1>Наши услуги</h1>
+            <p>Комплексные решения для вашего бизнеса и дома</p>
+        </section>
+
+        <section class="services-categories">
+            <div class="category-card">
+                <div class="category-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h2>Электроснабжение</h2>
+                <ul>
+                    <li>Подключение к электросетям</li>
+                    <li>Технологическое присоединение</li>
+                    <li>Перераспределение мощности</li>
+                </ul>
+                <button class="btn-more">Подробнее</button>
+            </div>
+
+            <div class="category-card">
+                <div class="category-icon">
+                    <i class="fas fa-solar-panel"></i>
+                </div>
+                <h2>Энергосервис</h2>
+                <ul>
+                    <li>Энергоаудит</li>
+                    <li>Оптимизация потребления</li>
+                    <li>Внедрение Smart Grid</li>
+                </ul>
+                <button class="btn-more">Подробнее</button>
+            </div>
+
+            <div class="category-card">
+                <div class="category-icon">
+                    <i class="fas fa-tools"></i>
+                </div>
+                <h2>Техобслуживание</h2>
+                <ul>
+                    <li>Диагностика оборудования</li>
+                    <li>Ремонтные работы</li>
+                    <li>Аварийное обслуживание</li>
+                </ul>
+                <button class="btn-more">Подробнее</button>
+            </div>
+        </section>
+
+        <section class="service-details">
+            <h2>Подробнее о наших услугах</h2>
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="tab1">Технологическое присоединение</button>
+                <button class="tab-btn" data-tab="tab2">Энергоаудит</button>
+                <button class="tab-btn" data-tab="tab3">Smart решения</button>
+            </div>
+            
+            <div class="tab-content active" id="tab1">
+                <h3>Технологическое присоединение</h3>
+                <p>Полный комплекс услуг по подключению к электрическим сетям...</p>
+                <ul>
+                    <li>Сроки подключения от 30 дней</li>
+                    <li>Мощность до 150 кВт</li>
+                    <li>Сопровождение на всех этапах</li>
+                </ul>
+            </div>
+            
+            <div class="tab-content" id="tab2">
+                <h3>Энергоаудит</h3>
+                <p>Профессиональный анализ энергопотребления...</p>
+            </div>
+            
+            <div class="tab-content" id="tab3">
+                <h3>Smart решения</h3>
+                <p>Внедрение интеллектуальных систем учета...</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <!-- Футер как в других страницах -->
+    </footer>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
