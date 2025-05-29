@@ -17,6 +17,12 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from starlette.status import HTTP_303_SEE_OTHER
+from fastapi.responses import RedirectResponse
+from fastapi import Form
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pydantic import validator
+from fastapi.responses import HTMLResponse, RedirectResponse
+
 
 
 # Настройка логгирования
@@ -31,7 +37,7 @@ class Config:
     ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 
 from fastapi import FastAPI
-
+security = HTTPBearer()
 app = FastAPI()
 # Указываем папку с шаблонами
 templates = Jinja2Templates(directory="app/templates")
@@ -218,6 +224,115 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
         "email": current_user.email
     }
 
+# Добавляем обработчики для форм регистрации/логина
+@app.post("/register", response_class=RedirectResponse)
+async def handle_register(
+    request: Request,
+    username: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    try:
+        # Проверяем, существует ли пользователь
+        if get_user(db, email):
+            return RedirectResponse("/register?error=user_exists", status_code=HTTP_303_SEE_OTHER)
+        
+        # Хешируем пароль и создаем пользователя
+        hashed_password = get_password_hash(password)
+        db_user = User(
+            username=username,
+            email=email,
+            password=hashed_password
+        )
+        db.add(db_user)
+        db.commit()
+        
+        # Создаем токен и устанавливаем куки
+        access_token = create_access_token({"sub": email})
+        response = RedirectResponse("/", status_code=HTTP_303_SEE_OTHER)
+        response.set_cookie(key="access_token", value=f"Bearer {access_token}", httponly=True)
+        return response
+        
+    except Exception as e:
+        logger.error(f"Registration error: {e}")
+        return RedirectResponse("/register?error=server_error", status_code=HTTP_303_SEE_OTHER)
+
+@app.post("/login", response_class=RedirectResponse)
+async def handle_login(
+    request: Request,
+    email: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    try:
+        user = authenticate_user(db, email, password)
+        if not user:
+            return RedirectResponse("/login?error=invalid_credentials", status_code=HTTP_303_SEE_OTHER)
+        
+        access_token = create_access_token({"sub": email})
+        response = RedirectResponse("/", status_code=HTTP_303_SEE_OTHER)
+        response.set_cookie(key="access_token", value=f"Bearer {access_token}", httponly=True)
+        return response
+        
+    except Exception as e:
+        logger.error(f"Login error: {e}")
+        return RedirectResponse("/login?error=server_error", status_code=HTTP_303_SEE_OTHER)
+
+   #Проверка авторизации в рутах 
+async def get_current_user(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+):
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, Config.SECRET_KEY, algorithms=[Config.ALGORITHM])
+        email = payload.get("sub")
+        if not email:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        user = get_user(db, email)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        return user
+    except JWTError as e:
+        # Проверяем куки, если нет токена в заголовках
+        token = request.cookies.get("access_token")
+        if token and token.startswith("Bearer "):
+            token = token[7:]
+            try:
+                payload = jwt.decode(token, Config.SECRET_KEY, algorithms=[Config.ALGORITHM])
+                email = payload.get("sub")
+                if not email:
+                    raise HTTPException(status_code=401, detail="Invalid token")
+                user = get_user(db, email)
+                if not user:
+                    raise HTTPException(status_code=404, detail="User not found")
+                return user
+            except JWTError:
+                pass
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+@app.get("/profile", response_class=HTMLResponse)
+async def profile(request: Request, current_user: User = Depends(get_current_user)):
+    return templates.TemplateResponse("profile.html", {
+        "request": request,
+        "user": current_user
+    }) 
+
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+    
+    @validator('password')
+    def password_complexity(cls, v):
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters')
+        # Дополнительные проверки
+        return v
+    
+    
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
