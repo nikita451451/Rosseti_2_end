@@ -1,11 +1,25 @@
 from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from config import get_settings
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Session
+from . import models
+# Создаём базовый класс для всех моделей
+Base = declarative_base()
 
-settings = get_settings()
-SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
+# Настроим строку подключения
+DATABASE_URL = "postgresql://postgres:password@localhost:5433/rosseti_db"
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"sslmode": "prefer"} if settings.DB_SSL else {}
-)
+# Создание движка для базы данных
+engine = create_engine(DATABASE_URL, echo=True)
+
+# Создание сессии для работы с БД
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Функция для получения сессии
+def get_db() -> Session: # type: ignore
+    db = SessionLocal()
+    try:
+        yield db  # Возвращаем сессию
+    finally:
+        db.close()  # Закрываем сессию после использования

@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from typing import Optional
-from sqlalchemy import create_engine, Column, Integer, String, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from contextlib import contextmanager
@@ -28,6 +28,13 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 from fastapi import Depends
 from fastapi import status
+from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
+from fastapi import FastAPI, HTTPException, Depends
+from sqlalchemy.orm import Session
+from app import models, schemas
+from app.database import get_db
+from app.database import DATABASE_URL
 
 
 
@@ -52,9 +59,36 @@ app = FastAPI()
 # Указываем папку с шаблонами
 templates = Jinja2Templates(directory="app/templates")
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to FastAPI with PostgreSQL!"}
+@app.get("/api/healthcheck")
+async def healthcheck():
+    return {"status": "connected"}
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@app.get("/check-db")
+async def check_db():
+    try:
+        # Создаём движок для подключения к базе данных
+        engine = create_engine(DATABASE_URL)
+
+        # Контекстный менеджер для автоматического закрытия соединения
+        with engine.connect() as connection:
+            # Используем text() для выполнения запроса
+            result = connection.execute(text("SELECT 1"))
+            result.fetchone()  # Извлекаем результат для проверки подключения
+
+        logger.info("Database connection successful.")
+        return {"status": "connected"}
+
+    except SQLAlchemyError as e:
+        logger.error(f"Database connection failed: {str(e)}")
+        return {"status": "disconnected", "error": "SQLAlchemy error - " + str(e)}
+
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+    
 # Подключаем статические файлы
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
@@ -94,12 +128,13 @@ if __name__ == "__main__":
 async def not_found(request: Request, exc):
     return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
 # CORS
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:8000"],  
+    allow_origins=["*"],  # Разрешаем все домены (или укажи конкретные)
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 # Подключение к БД
@@ -213,23 +248,28 @@ async def get_current_user(
         raise HTTPException(status_code=401, detail="Invalid token")
 
 # Роуты
-@app.post("/register/", response_model=Token)
-def register(user: UserCreate, db: Session = Depends(get_db)):
-    if get_user(db, user.email):
-        raise HTTPException(...)
+@app.post("/register/")
+async def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    # Проверка, существует ли уже пользователь с таким email
+    db_user = db.query(models.User).filter(models.User.email == user.email).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
     
+    # Хешируем пароль
     hashed_password = get_password_hash(user.password)
-    db_user = User(
+    
+    # Создание нового пользователя
+    new_user = models.User(
         username=user.username,
         email=user.email,
-        hashed_password=hashed_password  # Исправлено здесь
+        hashed_password=hashed_password
     )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
     
-    access_token = create_access_token({"sub": user.email})
-    return {"access_token": access_token, "token_type": "bearer"}
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    
+    return {"message": "User created successfully!"}
 
 @app.post("/login/", response_model=Token)
 def login(user: UserLogin, db: Session = Depends(get_db)):
@@ -302,15 +342,16 @@ async def handle_login(
     except Exception as e:
         logger.error(f"Login error: {e}")
         return RedirectResponse("/login?error=server_error", status_code=HTTP_303_SEE_OTHER)
-@app.get("/api/healthcheck")
-async def healthcheck():
-    try:
-        with SessionLocal() as db:
-            db.execute("SELECT 1")
-        return {"status": "connected"}
-    except Exception as e:
-        return {"status": "disconnected", "error": str(e)}
-
+    
+@router.get("/healthcheck")
+async def health_check():
+    return check_db_connection()
+   #Проверка авторизации в рутах 
+async def get_current_user(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+):
     token = credentials.credentials
     try:
         payload = jwt.decode(token, Config.SECRET_KEY, algorithms=[Config.ALGORITHM])
@@ -432,4 +473,6 @@ class UserCreate(BaseModel):
     
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+

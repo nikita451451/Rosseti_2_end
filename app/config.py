@@ -2,7 +2,7 @@ import os
 from pydantic import BaseSettings
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "f""postgresql://postgres:123@localhost:5433/rosseti_db"
+    DATABASE_URL = "postgresql://postgres:123@localhost:5433/rosseti_db"
     SECRET_KEY: str = "your-secret-key-here"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
@@ -14,5 +14,11 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+class Settings:
+    DATABASE_URL = "postgresql://postgres:123@localhost:5433/rosseti_db"
+    from pydantic import BaseSettings
+
+class Settings(BaseSettings):
+    DATABASE_URL: str = "postgresql://postgres:123@localhost:5433/rosseti_db"
 
 settings = Settings()

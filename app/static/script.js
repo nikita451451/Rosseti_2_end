@@ -157,26 +157,40 @@ document.getElementById('registerForm')?.addEventListener('submit', async functi
     }
 });
 // 1. Добавьте обработку реальных API запросов вместо имитации
-async function registerUser(formData) {
-    try {
-        const response = await fetch('/api/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
-        });
-        
-        if (!response.ok) {
-            throw new Error('Ошибка регистрации');
-        }
-        
-        return await response.json();
-    } catch (error) {
-        console.error('Registration error:', error);
-        throw error;
+async function registerUser() {
+    const fullname = document.getElementById('fullname').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+
+    // Проверка на совпадение паролей
+    if (password !== confirmPassword) {
+        showError("Пароли не совпадают");
+        return;
     }
-}   
+
+    const response = await fetch('http://127.0.0.1:8000/register/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            fullname: fullname,
+            email: email,
+            password: password
+        })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+        console.log('User registered successfully:', data);
+        // Дополнительно, можно перенаправить или показать сообщение об успехе
+    } else {
+        console.error('Registration error:', data);
+        showError(data.detail || 'Registration failed.');
+    }
+}
 async function loginUser(credentials) {
     const response = await fetch('http://localhost:8000/login/', {
         method: 'POST',

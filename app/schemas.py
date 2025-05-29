@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, validator
-
+from pydantic import BaseModel, EmailStr
 class UserBase(BaseModel):
     username: str
     email: EmailStr
@@ -30,3 +30,11 @@ class ResetPasswordRequest(BaseModel):
 class ResetPasswordConfirm(BaseModel):
     token: str
     new_password: str
+
+class UserCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+
+    class Config:
+        orm_mode = True
