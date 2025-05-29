@@ -1,3 +1,7 @@
+// Проверка аутентификации при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    checkAuthStatus();
+});
 // DOM элементы
 const loginBtn = document.getElementById('loginBtn');
 const registerBtn = document.getElementById('registerBtn');
@@ -9,59 +13,90 @@ const sidebarUserEmail = document.getElementById('sidebarUserEmail');
 // Проверка авторизации при загрузке
 document.addEventListener('DOMContentLoaded', function() {
     checkAuthStatus();
-    setupMobileMenu();
     setupContentSections();
 });
 
-// Проверка статуса авторизации
-function checkAuthStatus() {
+// 2. Улучшенная проверка авторизации с обработкой JWT
+async function checkAuthStatus() {
     const token = localStorage.getItem('token');
-    if (token) {
-        // В реальном приложении здесь бы была проверка токена
-        const userData = JSON.parse(localStorage.getItem('userData')) || {
-            name: 'Иван Иванов',
-            email: 'ivan@example.com'
-        };
+    if (!token) return;
+    
+    try {
+        // Проверка валидности токена (в реальном приложении - запрос к API)
+        const response = await fetch('/api/validate-token', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         
-        // Обновляем UI
-        loginBtn.style.display = 'none';
-        registerBtn.style.display = 'none';
-        userPanel.style.display = 'flex';
-        userName.textContent = userData.name;
-        sidebarUserName.textContent = userData.name;
-        sidebarUserEmail.textContent = userData.email;
-        
-        // Показываем контент для авторизованных
-        document.querySelector('.alert').style.display = 'none';
+        if (response.ok) {
+            const userData = await response.json();
+            updateUIForLoggedInUser(userData);
+        } else {
+            logout(); // Токен невалидный - разлогиниваем
+        }
+    } catch (error) {
+        console.error('Auth check error:', error);
     }
 }
 
-// Мобильное меню
-function setupMobileMenu() {
-    const toggle = document.querySelector('.mobile-menu-toggle');
-    const nav = document.querySelector('.header__nav');
-    const auth = document.querySelector('.header__auth');
-    
-    toggle.addEventListener('click', function() {
-        const isNavVisible = nav.style.display === 'flex';
-        nav.style.display = isNavVisible ? 'none' : 'flex';
-        auth.style.display = isNavVisible ? 'none' : 'flex';
-    });
+// 3. Отдельная функция для обновления UI
+function updateUIForLoggedInUser(userData) {
+    loginBtn.style.display = 'none';
+    registerBtn.style.display = 'none';
+    userPanel.style.display = 'flex';
+    userName.textContent = userData.name;
+    sidebarUserName.textContent = userData.name;
+    sidebarUserEmail.textContent = userData.email;
+    const alertElement = document.querySelector('.alert');
+if (alertElement) {
+    alertElement.style.display = 'none';
 }
 
-// Управление разделами контента
+    
+}
+function updateUIForLoggedInUser(userData) {
+    // 1. Собираем все элементы в объект для удобства
+    const elements = {
+        loginBtn: document.getElementById('loginBtn'),
+        registerBtn: document.getElementById('registerBtn'),
+        userPanel: document.getElementById('userPanel'),
+        userName: document.getElementById('userName'),
+        sidebarUserName: document.getElementById('sidebarUserName'),
+        sidebarUserEmail: document.getElementById('sidebarUserEmail'),
+        alert: document.querySelector('.alert')
+    };
+
+    // 2. Проверяем существование элементов перед изменением
+    if (elements.loginBtn) elements.loginBtn.style.display = 'none';
+    if (elements.registerBtn) elements.registerBtn.style.display = 'none';
+    if (elements.userPanel) elements.userPanel.style.display = 'flex';
+    
+    // 3. Обновляем текстовые данные
+    if (elements.userName) elements.userName.textContent = userData.name;
+    if (elements.sidebarUserName) elements.sidebarUserName.textContent = userData.name;
+    if (elements.sidebarUserEmail) elements.sidebarUserEmail.textContent = userData.email;
+    
+    // 4. Скрываем алерт, если он есть
+    if (elements.alert) elements.alert.style.display = 'none';
+}
+// Управление разделами контента (только для страниц с контентом)
 function setupContentSections() {
+    // Проверяем, есть ли на странице нужные элементы
+    const homeContent = document.getElementById('home-content');
+    const sidebarLinks = document.querySelectorAll('.sidebar ul li a');
+    
+    // Если элементов нет (как на страницах login/register), выходим из функции
+    if (!homeContent || sidebarLinks.length === 0) return;
+    
     // Показываем первый раздел по умолчанию
-    document.getElementById('home-content').classList.add('active');
+    homeContent.classList.add('active');
     
     // Обработчики для бокового меню
-    const menuLinks = document.querySelectorAll('.sidebar ul li a');
-    menuLinks.forEach(link => {
+    sidebarLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             
             // Удаляем активный класс у всех ссылок
-            menuLinks.forEach(item => item.classList.remove('active'));
+            sidebarLinks.forEach(item => item.classList.remove('active'));
             
             // Добавляем активный класс текущей ссылке
             this.classList.add('active');
@@ -84,81 +119,113 @@ function showContent(sectionId) {
     // Показываем выбранный раздел
     document.getElementById(`${sectionId}-content`).classList.add('active');
 }
-
-// Модальные окна
-function openLoginModal() {
-    document.getElementById('loginModal').style.display = 'flex';
-}
-
-function closeLoginModal() {
-    document.getElementById('loginModal').style.display = 'none';
-}
-
-function openRegisterModal() {
-    document.getElementById('registerModal').style.display = 'flex';
-}
-
-function closeRegisterModal() {
-    document.getElementById('registerModal').style.display = 'none';
-}
-
-function switchToRegister() {
-    closeLoginModal();
-    openRegisterModal();
-}
-
 // Обработка формы регистрации
-document.getElementById('registerForm').addEventListener('submit', async function(e) {
+document.getElementById('registerForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    const formData = {
-        username: document.getElementById('username').value,
-        email: document.getElementById('email').value,
-        password: document.getElementById('password').value
-    };
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
     
-    // В реальном приложении здесь был бы fetch запрос к API
-    console.log('Регистрация:', formData);
-    
-    // Имитация успешной регистрации
-    setTimeout(() => {
-        localStorage.setItem('token', 'fake-jwt-token');
-        localStorage.setItem('userData', JSON.stringify({
-            name: formData.username,
-            email: formData.email
-        }));
+    try {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Регистрация...';
         
-        closeRegisterModal();
-        checkAuthStatus();
-        alert('Регистрация прошла успешно!');
-    }, 1000);
+        const formData = {
+            name: document.getElementById('fullname').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            confirmPassword: document.getElementById('confirm-password').value
+        };
+        
+        if (formData.password !== formData.confirmPassword) {
+            throw new Error('Пароли не совпадают');
+        }
+        
+        // Вызов функции регистрации
+        const data = await registerUser(formData);
+        
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userData', JSON.stringify(data.user));
+        
+        showToast('Регистрация прошла успешно!');
+        window.location.href = '/'; // Перенаправление после регистрации
+    } catch (error) {
+        showError(error.message, 'register-error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+});
+// 1. Добавьте обработку реальных API запросов вместо имитации
+async function registerUser(formData) {
+    try {
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (!response.ok) {
+            throw new Error('Ошибка регистрации');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Registration error:', error);
+        throw error;
+    }
+}   
+async function loginUser(credentials) {
+    const response = await fetch('http://localhost:8000/login/', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            email: credentials.email,
+            password: credentials.password
+        }),
+    });
+    
+    if (!response.ok) {
+        const errorData = await response.json(); // Получаем детали ошибки от сервера
+        throw new Error(errorData.detail || "Ошибка входа");
+    }
+    
+    return await response.json();
+}
+document.getElementById('loginForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    
+    try {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Вход...';
+        
+        const credentials = {
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value
+        };
+        
+        const data = await loginUser(credentials);
+        
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userData', JSON.stringify(data.user));
+        
+        showToast('Вход выполнен успешно!');
+        window.location.href = '/'; // Перенаправление после входа
+    } catch (error) {
+        showError(error.message, 'login-error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
 });
 
-// Обработка формы входа
-document.getElementById('loginForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const formData = {
-        email: document.getElementById('loginEmail').value,
-        password: document.getElementById('loginPassword').value
-    };
-    
-    // В реальном приложении здесь был бы fetch запрос к API
-    console.log('Вход:', formData);
-    
-    // Имитация успешного входа
-    setTimeout(() => {
-        localStorage.setItem('token', 'fake-jwt-token');
-        localStorage.setItem('userData', JSON.stringify({
-            name: 'Иван Иванов', // В реальном приложении это пришло бы с сервера
-            email: formData.email
-        }));
-        
-        closeLoginModal();
-        checkAuthStatus();
-        alert('Вход выполнен успешно!');
-    }, 1000);
-});
 
 // Выход из системы
 function logout() {
@@ -183,35 +250,48 @@ function logout() {
     menuLinks.forEach(link => link.classList.remove('active'));
     menuLinks[0].classList.add('active');
 }
+// 5. Вспомогательные функции для уведомлений
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.remove(), 3000);
+}
 
-// Закрытие модальных окон при клике вне их
-window.addEventListener('click', function(e) {
-    if (e.target.classList.contains('modal')) {
-        e.target.style.display = 'none';
+function showError(message, elementId = 'error-message') {
+    const errorEl = document.getElementById(elementId);
+    if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.style.display = 'block';
     }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    const statusElement = document.getElementById('server-status');
+
+    // Функция для запроса состояния сервера
+    async function checkServerStatus() {
+        try {
+            const response = await fetch('/api/healthcheck');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.status === 'connected') {
+                    statusElement.className = 'server-status online';
+                } else {
+                    statusElement.className = 'server-status offline';
+                }
+            } else {
+                statusElement.className = 'server-status offline';
+            }
+        } catch (error) {
+            statusElement.className = 'server-status offline';
+        }
+    }
+
+    // Проверка при загрузке страницы
+    checkServerStatus();
+
+    // Проверка каждые 30 секунд
+    setInterval(checkServerStatus, 30000);
 });
-
-
-// Открытие модального окна для входа
-function openLoginModal() {
-  const loginModal = document.getElementById('loginModal');
-  loginModal.style.display = 'block';
-}
-
-// Закрытие модального окна для входа
-function closeLoginModal() {
-  const loginModal = document.getElementById('loginModal');
-  loginModal.style.display = 'none';
-}
-
-// Открытие модального окна для регистрации
-function openRegisterModal() {
-  const registerModal = document.getElementById('registerModal');
-  registerModal.style.display = 'block';
-}
-
-// Закрытие модального окна для регистрации
-function closeRegisterModal() {
-  const registerModal = document.getElementById('registerModal');
-  registerModal.style.display = 'none';
-}

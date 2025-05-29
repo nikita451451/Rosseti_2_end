@@ -2,7 +2,7 @@
 import os
 import logging
 from fastapi import FastAPI, HTTPException, Depends, status, Request
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer,HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime, timedelta
@@ -22,6 +22,12 @@ from fastapi import Form
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import validator
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import APIRouter, HTTPException
+from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import sessionmaker
+from fastapi import Depends
+from fastapi import status
 
 
 
@@ -29,19 +35,26 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Конфигурация (лучше вынести в config.py или .env)
+# Конфигурация
 class Config:
     DATABASE_URL = "postgresql://postgres:123@localhost:5433/rosseti_db"
-    SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
+    SECRET_KEY = "1234"
     ALGORITHM = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES = 1440
+    RESET_PASSWORD_TOKEN_EXPIRE_MINUTES = 30
+    SMTP_SERVER = "smtp.example.com"
+    SMTP_PORT = 587
+    SMTP_USERNAME = "email@example.com"
+    SMTP_PASSWORD = "password"
 
-from fastapi import FastAPI
 security = HTTPBearer()
 app = FastAPI()
 # Указываем папку с шаблонами
 templates = Jinja2Templates(directory="app/templates")
 
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to FastAPI with PostgreSQL!"}
 # Подключаем статические файлы
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
@@ -71,21 +84,19 @@ async def news(request: Request):
 async def news(request: Request):
     return templates.TemplateResponse("forgot-password.html", {"request": request})
 
-app.mount(
-    "/static",
-    StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")),
-    name="static"
-)
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
-
+@app.exception_handler(404)
+async def not_found(request: Request, exc):
+    return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://localhost:8000"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
@@ -95,16 +106,29 @@ app.add_middleware(
 engine = create_engine(Config.DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+router = APIRouter()
 
+def check_db_connection():
+    try:
+        # Создаем подключение
+        engine = create_engine(Config.DATABASE_URL)
+        connection = engine.connect()
+        connection.close()
+        return {"status": "success", "message": "Database connection successful"}
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Database connection failed: {str(e)}"
+        )
+    
 # Модель пользователя
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
-    password = Column(String)
+    hashed_password = Column(String)  
     created_at = Column(DateTime, default=datetime.utcnow)
-
 # Создаем таблицы (лучше использовать Alembic для миграций)
 Base.metadata.create_all(bind=engine)
 
@@ -192,13 +216,13 @@ async def get_current_user(
 @app.post("/register/", response_model=Token)
 def register(user: UserCreate, db: Session = Depends(get_db)):
     if get_user(db, user.email):
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(...)
     
     hashed_password = get_password_hash(user.password)
     db_user = User(
         username=user.username,
         email=user.email,
-        password=hashed_password
+        hashed_password=hashed_password  # Исправлено здесь
     )
     db.add(db_user)
     db.commit()
@@ -278,13 +302,15 @@ async def handle_login(
     except Exception as e:
         logger.error(f"Login error: {e}")
         return RedirectResponse("/login?error=server_error", status_code=HTTP_303_SEE_OTHER)
+@app.get("/api/healthcheck")
+async def healthcheck():
+    try:
+        with SessionLocal() as db:
+            db.execute("SELECT 1")
+        return {"status": "connected"}
+    except Exception as e:
+        return {"status": "disconnected", "error": str(e)}
 
-   #Проверка авторизации в рутах 
-async def get_current_user(
-    request: Request,
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
-):
     token = credentials.credentials
     try:
         payload = jwt.decode(token, Config.SECRET_KEY, algorithms=[Config.ALGORITHM])
@@ -319,7 +345,78 @@ async def profile(request: Request, current_user: User = Depends(get_current_use
         "request": request,
         "user": current_user
     }) 
+class Config:
+    RESET_PASSWORD_TOKEN_EXPIRE_MINUTES = 30
+    SMTP_SERVER = "smtp.example.com"
+    SMTP_PORT = 587
+    SMTP_USERNAME = "email@example.com"
+    SMTP_PASSWORD = "password"
 
+# Дополнительные Pydantic модели
+class ResetPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordConfirm(BaseModel):
+    token: str
+    new_password: str
+
+# Дополнительные роуты
+@app.post("/forgot-password")
+async def forgot_password(
+    request: Request,
+    email: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    user = get_user(db, email)
+    if not user:
+        return RedirectResponse("/forgot-password?error=user_not_found", status_code=303)
+    
+    reset_token = create_access_token(
+        {"sub": email}, 
+        expires_delta=timedelta(minutes=Config.RESET_PASSWORD_TOKEN_EXPIRE_MINUTES)
+    )
+    
+    # Здесь должна быть отправка письма с токеном
+    # send_reset_email(email, reset_token)
+    
+    reset_url = f"http://localhost:8000/reset-password?token={reset_token}"
+    return RedirectResponse(f"/forgot-password?success=true&email={email}", status_code=303)
+
+@app.post("/reset-password")
+async def reset_password(
+    request: Request,
+    token: str = Form(...),
+    new_password: str = Form(...),
+    confirm_password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    if new_password != confirm_password:
+        return RedirectResponse(f"/reset-password?token={token}&error=password_mismatch", status_code=303)
+    
+    try:
+        payload = jwt.decode(token, Config.SECRET_KEY, algorithms=[Config.ALGORITHM])
+        email = payload.get("sub")
+        if not email:
+            raise HTTPException(status_code=400, detail="Invalid token")
+        
+        user = get_user(db, email)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user.password = get_password_hash(new_password)
+        db.commit()
+        
+        return RedirectResponse("/login?password_reset=true", status_code=303)
+    except JWTError:
+        return RedirectResponse("/login?error=invalid_token", status_code=303)
+
+@app.get("/reset-password", response_class=HTMLResponse)
+async def reset_password_page(request: Request, token: str):
+    try:
+        jwt.decode(token, Config.SECRET_KEY, algorithms=[Config.ALGORITHM])
+        return templates.TemplateResponse("reset-password.html", {"request": request, "token": token})
+    except JWTError:
+        return RedirectResponse("/login?error=invalid_token", status_code=303)
 class UserCreate(BaseModel):
     username: str
     email: str
@@ -335,6 +432,4 @@ class UserCreate(BaseModel):
     
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
