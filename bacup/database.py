@@ -18,8 +18,13 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Функция для получения сессии
 def get_db() -> Session: # type: ignore
+# database.py
+    from sqlalchemy.orm import Session
+from fastapi import Depends, HTTPException
+
+def get_db():
     db = SessionLocal()
     try:
-        yield db  # Возвращаем сессию
+        yield db
     finally:
-        db.close()  # Закрываем сессию после использования
+        db.close()

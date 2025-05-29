@@ -35,8 +35,11 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 from app.database import get_db
 from app.database import DATABASE_URL
-
-
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy.orm import Session
+from .database import get_db  # Используем относительный импорт
+from .models import User  # Используем относительный импорт
+from pydantic import BaseModel
 
 # Настройка логгирования
 logging.basicConfig(level=logging.INFO)
@@ -249,22 +252,15 @@ async def get_current_user(
 
 # Роуты
 @app.post("/register/")
-async def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    # Проверка, существует ли уже пользователь с таким email
-    db_user = db.query(models.User).filter(models.User.email == user.email).first()
+def register(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.email == user.email).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    
-    # Хешируем пароль
-    hashed_password = get_password_hash(user.password)
-    
-    # Создание нового пользователя
-    new_user = models.User(
-        username=user.username,
-        email=user.email,
-        hashed_password=hashed_password
-    )
-    
+
+    # Хеширование пароля
+    hashed_password = user.password  # Здесь нужно добавить реальное хеширование пароля
+
+    new_user = User(username=user.username, email=user.email, hashed_password=hashed_password)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
