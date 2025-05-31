@@ -1021,15 +1021,32 @@ body {
 }
 
 .error-message {
-    color: var(--error-color);
-    margin-bottom: 20px;
-    text-align: center;
-    padding: 10px;
-    background-color: rgba(211, 47, 47, 0.1);
-    border-radius: var(--border-radius);
+    color: #d32f2f;
+    background: #ffebee;
+    padding: 12px;
+    border-radius: 4px;
+    margin: 16px 0;
     display: none;
 }
+input.error {
+    border-color: #d32f2f !important;
+}
 
+.server-status {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-left: 8px;
+}
+
+.server-status.online {
+    background-color: #4caf50;
+}
+
+.server-status.offline {
+    background-color: #f44336;
+}
 .spinner {
     border: 3px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
@@ -1092,15 +1109,6 @@ body {
     margin-left: 8px;
     vertical-align: middle;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-}
-
-.server-status.online {
-    background-color: #4CAF50;
-    animation: pulse 1.5s infinite;
-}
-
-.server-status.offline {
-    background-color: #F44336;
 }
 
 @keyframes pulse {

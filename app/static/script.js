@@ -35,25 +35,66 @@ async function loginUser(email, password) {
 
 async function registerUser(userData) {
     try {
-        const response = await fetch(`${API_BASE_URL}${AUTH_ENDPOINTS.register}`, {
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(userData)
+            body: JSON.stringify({
+                username: userData.username,
+                email: userData.email,
+                password: userData.password,
+                confirm_password: userData.confirmPassword  // Используем правильное имя поля
+            })
         });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Ошибка регистрации');
-        }
+      if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.detail || 'Ошибка регистрации');
+      }
 
-        return await response.json();
-    } catch (error) {
-        console.error('Registration error:', error);
-        throw error;
-    }
+      return await response.json();
+  } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+  }
 }
+
+function handleRegisterFormSubmit(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const userData = {
+        username: form.username.value,
+        email: form.email.value,
+        password: form.password.value,
+        confirmPassword: form.confirm_password.value  // Получаем значение подтверждения пароля
+    };
+
+  registerUser(userData)
+      .then(data => {
+          alert(data.message);
+          window.location.href = '/login';
+      })
+      .catch(error => {
+          const errorElement = document.getElementById('register-error');
+          errorElement.textContent = error.message;
+          errorElement.style.display = 'block';
+          
+          // Подсветка проблемных полей
+          if (error.message.includes('Email')) {
+              form.email.classList.add('error');
+          }
+          if (error.message.includes('имя пользователя')) {
+              form.username.classList.add('error');
+          }
+          if (error.message.includes('Пароли')) {
+              form.password.classList.add('error');
+              form.confirm_password.classList.add('error');
+          }
+      });
+}
+
 
 async function forgotPassword(email) {
     try {

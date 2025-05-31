@@ -1,9 +1,11 @@
-from fastapi import FastAPI, Depends, HTTPException, Request, status
+from fastapi import APIRouter, FastAPI, Depends, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from datetime import timedelta
@@ -196,6 +198,76 @@ async def news(request: Request):
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
+# Создаем отдельный роутер для аутентификации
+auth_router = APIRouter(prefix="/auth")
+
+class UserRegister(BaseModel):
+    username: str
+    email: str
+    password: str
+
+class UserRegister(UserCreate):
+    confirm_password: str  # Добавляем поле подтверждения пароля
+    
+@auth_router.post("/register", status_code=status.HTTP_201_CREATED)
+async def register_user(
+    user_data: UserRegister, 
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        # Проверка совпадения паролей (если нужно)
+        if user_data.password != user_data.confirm_password:
+            raise HTTPException(
+                status_code=400,
+                detail="Пароли не совпадают"
+            )
+
+        # Проверка существующего пользователя
+        existing_user = await db.execute(
+            select(User).where(
+                (User.email == user_data.email) | 
+                (User.username == user_data.username)
+            )
+        )
+        if existing_user.scalar():
+            raise HTTPException(
+                status_code=400,
+                detail="Email или имя пользователя уже заняты"
+            )
+
+        # Создание пользователя
+        hashed_password = get_password_hash(user_data.password)
+        new_user = User(
+            username=user_data.username,
+            email=user_data.email,
+            hashed_password=hashed_password
+        )
+        
+        db.add(new_user)
+        await db.commit()
+        await db.refresh(new_user)
+        
+        return {
+            "status": "success",
+            "message": "Пользователь успешно зарегистрирован",
+            "user": {
+                "id": new_user.id,
+                "username": new_user.username,
+                "email": new_user.email
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        )
+# Регистрируем роутер
+app.include_router(auth_router)
+
+@app.get("/api/healthcheck")
+async def healthcheck():
+    return {"status": "ok"}
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

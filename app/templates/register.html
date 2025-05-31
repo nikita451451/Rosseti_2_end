@@ -77,7 +77,27 @@
     <footer class="footer">
         <!-- Ваш стандартный футер -->
     </footer>
-
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('registerForm');
+            if (form) {
+                form.addEventListener('submit', handleRegisterFormSubmit);
+            }
+            
+            // Проверка состояния сервера
+            fetch(`${API_BASE_URL}/api/healthcheck`)
+                .then(response => {
+                    const statusElement = document.getElementById('server-status');
+                    if (response.ok) {
+                        statusElement.className = 'server-status online';
+                        statusElement.title = 'Сервер доступен';
+                    } else {
+                        statusElement.className = 'server-status offline';
+                        statusElement.title = 'Сервер недоступен';
+                    }
+                });
+        });
+        </script>        
     <script src="/static/script.js"></script>
 </body>
 </html>
