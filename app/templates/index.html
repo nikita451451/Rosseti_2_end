@@ -22,9 +22,9 @@
             </ul>
         </nav>
         <div class="header__auth">
-            <button onclick="location.href='/login'">Войти</button>
-            <button onclick="location.href='/register'">Регистрация</button>
-            <div id="userPanel" style="display: none;">
+            <button id="loginBtn" onclick="location.href='/login'">Войти</button>
+            <button id="registerBtn" onclick="location.href='/register'">Регистрация</button>
+            <div id="userPanel">
                 <span id="userName"></span>
                 <button onclick="logout()">Выйти</button>
             </div>
@@ -61,7 +61,7 @@
         <div class="main-content" id="main-content">
             <!-- Контент по умолчанию (приветствие) -->
             <div id="home-content" class="content-section">
-                <h2>Добро пожаловать в личный кабинет</h2>
+                <h2 id="welcomeHeader">Добро пожаловать в личный кабинет</h2>
                 <div class="alert info">
                     <i class="fas fa-info-circle"></i> Для доступа ко всем функциям войдите в систему.
                 </div>

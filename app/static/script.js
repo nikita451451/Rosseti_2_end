@@ -10,17 +10,21 @@ const AUTH_ENDPOINTS = {
 // ====================== Основные функции аутентификации ======================
 async function loginUser(email, password) {
     try {
+        const formData = new URLSearchParams();
+        formData.append('username', email);
+        formData.append('password', password);
+
         const response = await fetch(`${API_BASE_URL}${AUTH_ENDPOINTS.login}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/x-www-form-urlencoded'
             },
-            body: JSON.stringify({ email, password })
+            body: formData
         });
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Ошибка входа');
+            throw new Error(error.detail || 'Ошибка входа');
         }
 
         const data = await response.json();
@@ -44,20 +48,21 @@ async function registerUser(userData) {
                 username: userData.username,
                 email: userData.email,
                 password: userData.password,
-                confirm_password: userData.confirmPassword  // Используем правильное имя поля
+                confirm_password: userData.confirmPassword
             })
         });
 
-      if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.detail || 'Ошибка регистрации');
-      }
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Ошибка регистрации');
+        }
 
-      return await response.json();
-  } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
-  }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Registration error:', error);
+        throw error;
+    }
 }
 
 function handleRegisterFormSubmit(e) {

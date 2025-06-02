@@ -1116,3 +1116,51 @@ input.error {
     50% { opacity: 0.6; }
     100% { opacity: 1; }
 }
+/* Добавим в styles.css */
+.btn-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.error-message {
+    background-color: #fee;
+    color: #d33;
+    padding: 12px;
+    border-radius: 4px;
+    margin: 15px 0;
+    border: 1px solid #fcc;
+    display: none;
+}
+
+.auth-form .form-group {
+    position: relative;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+}
+#userPanel {
+    display: none;
+    align-items: center;
+    gap: 10px;
+}
+
+#userName {
+    font-weight: 500;
+}
+
+.quick-actions .action-card {
+    display: none;
+    transition: all 0.3s ease;
+}
+
+.auth .quick-actions .action-card {
+    display: flex;
+}
