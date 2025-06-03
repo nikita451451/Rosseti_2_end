@@ -6,27 +6,39 @@
     <title>О компании - Россети</title>
     <link rel="stylesheet" href="/static/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Шапка -->
+    <!-- Анимированная шапка -->
     <header class="header">
         <div class="header__logo">
-            <img src="/static/images/logo.png" alt="Логотип Россети">
+            <a href="/" class="logo-link">
+                <img src="/static/images/logo.png" alt="Логотип Россети" class="logo-img pulse">
+            </a>
         </div>
         <nav class="header__nav">
-            <ul>
-                <li><a href="/">Главная</a></li>
-                <li><a href="/about" class="active">О компании</a></li>
-                <li><a href="/services">Услуги</a></li>
-                <li><a href="/news">Новости</a></li>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="/" class="nav-link"><i class="fas fa-home nav-icon"></i> Главная</a></li>
+                <li class="nav-item"><a href="/about" class="nav-link active"><i class="fas fa-info-circle nav-icon"></i> О компании</a></li>
+                <li class="nav-item"><a href="/services" class="nav-link"><i class="fas fa-bolt nav-icon"></i> Услуги</a></li>
+                <li class="nav-item"><a href="/news" class="nav-link"><i class="fas fa-newspaper nav-icon"></i> Новости</a></li>
             </ul>
         </nav>
         <div class="header__auth">
-            <button onclick="location.href='/login'">Войти</button>
-            <button onclick="location.href='/register'">Регистрация</button>
-            <div id="userPanel" style="display: none;">
-                <span id="userName"></span>
-                <button onclick="logout()">Выйти</button>
+            <button id="loginBtn" class="auth-btn login-btn" onclick="location.href='/login'">
+                <i class="fas fa-sign-in-alt btn-icon"></i>
+                <span class="btn-text">Войти</span>
+            </button>
+            <button id="registerBtn" class="auth-btn register-btn" onclick="location.href='/register'">
+                <i class="fas fa-user-plus btn-icon"></i>
+                <span class="btn-text">Регистрация</span>
+            </button>
+            <div id="userPanel" class="user-panel" style="display: none;">
+                <span id="userName" class="user-name"></span>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Выйти</span>
+                </button>
             </div>
         </div>
         <div class="mobile-menu-toggle">
@@ -34,143 +46,404 @@
         </div>
     </header>
 
-    <!-- Основной контент -->
+    <!-- Основной контент с параллакс-эффектом -->
     <main class="about-container">
-        <!-- Баннер -->
-        <section class="about-banner">
-            <div class="banner-content">
-                <h1>Россети - энергия будущего</h1>
-                <p>Лидер в сфере энергетики России</p>
+        <!-- Баннер с анимацией -->
+        <section class="about-banner parallax">
+            <div class="banner-content slide-up">
+                <h1 class="banner-title">Россети - энергия будущего</h1>
+                <p class="banner-subtitle">Лидер в сфере энергетики России</p>
+                <div class="scroll-indicator">
+                    <i class="fas fa-chevron-down pulse"></i>
+                </div>
             </div>
         </section>
 
-        <!-- О компании -->
-        <section class="about-section">
+        <!-- О компании с анимацией -->
+        <section class="about-section fade-in">
             <div class="about-content">
-                <h2><i class="fas fa-bolt"></i> О компании</h2>
-                <p>Компания «Россети» — крупнейшая в России электросетевая компания, обеспечивающая передачу и распределение электроэнергии по всей стране. Мы создаем надежную инфраструктуру для энергоснабжения миллионов потребителей.</p>
+                <h2 class="section-title"><i class="fas fa-bolt title-icon"></i> О компании</h2>
+                <p class="about-text">Компания «Россети» — крупнейшая в России электросетевая компания, обеспечивающая передачу и распределение электроэнергии по всей стране. Мы создаем надежную инфраструктуру для энергоснабжения миллионов потребителей.</p>
                 
                 <div class="stats-grid">
-                    <div class="stat-card">
-                        <i class="fas fa-chart-line"></i>
-                        <h3>15+ лет</h3>
-                        <p>Успешной работы</p>
+                    <div class="stat-card pop-in">
+                        <div class="stat-icon pulse">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="stat-number" data-count="15">0</h3>
+                        <p class="stat-text">Лет успешной работы</p>
+                        <div class="stat-wave"></div>
                     </div>
-                    <div class="stat-card">
-                        <i class="fas fa-users"></i>
-                        <h3>220 тыс.</h3>
-                        <p>Сотрудников</p>
+                    <div class="stat-card pop-in delay-1">
+                        <div class="stat-icon pulse">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3 class="stat-number" data-count="220">0</h3>
+                        <p class="stat-text">Тысяч сотрудников</p>
+                        <div class="stat-wave"></div>
                     </div>
-                    <div class="stat-card">
-                        <i class="fas fa-lightbulb"></i>
-                        <h3>12 млн</h3>
-                        <p>Потребителей</p>
+                    <div class="stat-card pop-in delay-2">
+                        <div class="stat-icon pulse">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <h3 class="stat-number" data-count="12">0</h3>
+                        <p class="stat-text">Миллионов потребителей</p>
+                        <div class="stat-wave"></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Наши услуги -->
-        <section class="services-section">
-            <h2><i class="fas fa-cogs"></i> Наши услуги</h2>
+        <!-- Наши услуги с анимацией -->
+        <section class="services-section fade-in">
+            <h2 class="section-title"><i class="fas fa-cogs title-icon"></i> Наши услуги</h2>
             <div class="services-grid">
-                <div class="service-card">
-                    <div class="service-icon">
+                <div class="service-card pop-in">
+                    <div class="service-icon pulse">
                         <i class="fas fa-plug"></i>
                     </div>
-                    <h3>Передача электроэнергии</h3>
-                    <p>Обеспечиваем надежную передачу электроэнергии по высоковольтным линиям</p>
+                    <h3 class="service-title">Передача электроэнергии</h3>
+                    <p class="service-description">Обеспечиваем надежную передачу электроэнергии по высоковольтным линиям</p>
+                    <div class="service-hover"></div>
                 </div>
-                <div class="service-card">
-                    <div class="service-icon">
+                <div class="service-card pop-in delay-1">
+                    <div class="service-icon pulse">
                         <i class="fas fa-network-wired"></i>
                     </div>
-                    <h3>Распределение энергии</h3>
-                    <p>Создаем и обслуживаем распределительные сети для конечных потребителей</p>
+                    <h3 class="service-title">Распределение энергии</h3>
+                    <p class="service-description">Создаем и обслуживаем распределительные сети для конечных потребителей</p>
+                    <div class="service-hover"></div>
                 </div>
-                <div class="service-card">
-                    <div class="service-icon">
+                <div class="service-card pop-in delay-2">
+                    <div class="service-icon pulse">
                         <i class="fas fa-microchip"></i>
                     </div>
-                    <h3>Инновационные технологии</h3>
-                    <p>Внедряем современные решения в сфере энергетики</p>
+                    <h3 class="service-title">Инновационные технологии</h3>
+                    <p class="service-description">Внедряем современные решения в сфере энергетики</p>
+                    <div class="service-hover"></div>
                 </div>
             </div>
         </section>
 
-        <!-- Контакты -->
-        <section class="contacts-section">
+        <!-- Контакты с анимацией -->
+        <section class="contacts-section fade-in">
             <div class="contacts-content">
-                <h2><i class="fas fa-map-marker-alt"></i> Контакты</h2>
+                <h2 class="section-title"><i class="fas fa-map-marker-alt title-icon"></i> Контакты</h2>
                 <div class="contacts-grid">
-                    <div class="contact-info">
-                        <h3>Головной офис</h3>
-                        <p><i class="fas fa-building"></i> Москва, ул. Примерная, д. 1</p>
-                        <p><i class="fas fa-phone"></i> +7 (495) 123-45-67</p>
-                        <p><i class="fas fa-envelope"></i> info@rosseti.com</p>
-                        <p><i class="fas fa-clock"></i> Пн-Пт: 9:00 - 18:00</p>
+                    <div class="contact-info pop-in">
+                        <h3 class="contact-title">Головной офис</h3>
+                        <p class="contact-item"><i class="fas fa-building contact-icon"></i> Москва, ул. Примерная, д. 1</p>
+                        <p class="contact-item"><i class="fas fa-phone contact-icon"></i> +7 (495) 123-45-67</p>
+                        <p class="contact-item"><i class="fas fa-envelope contact-icon"></i> info@rosseti.com</p>
+                        <p class="contact-item"><i class="fas fa-clock contact-icon"></i> Пн-Пт: 9:00 - 18:00</p>
+                        <div class="contact-social">
+                            <a href="#" class="social-link"><i class="fab fa-vk"></i></a>
+                            <a href="#" class="social-link"><i class="fab fa-telegram"></i></a>
+                            <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                        </div>
                     </div>
-                    <div class="contact-map">
+                    <div class="contact-map pop-in delay-1">
                         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2245.373789429732!2d37.618423315930664!3d55.75370098055348!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46b54a5a738fa419%3A0x7c347d506f52311f!2z0JrRgNCw0YHQvdCw0Y8g0YPQuy4sIDEsINCc0L7RgdC60LLQsCwgMTIzMDAx!5e0!3m2!1sru!2sru!4v1620000000000!5m2!1sru!2sru" 
-                                width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                                width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                        <div class="map-overlay"></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Призыв к действию -->
-        <section class="cta-section">
-            <div class="cta-content">
-                <h2>Хотите стать нашим клиентом?</h2>
-                <p>Зарегистрируйтесь в личном кабинете для доступа ко всем услугам</p>
-                <div class="header__auth">
-                    <a href="/login" class="btn btn-primary">Войти</a>
-                    <a href="/register" class="btn btn-primary">Регистрация</a>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
+      <!-- Динамический CTA блок -->
+<section class="cta-section slide-up" id="dynamic-cta">
+    <div class="cta-content">
+        <h2 class="cta-title" id="cta-title">Хотите стать нашим клиентом?</h2>
+        <p class="cta-text" id="cta-text">Зарегистрируйтесь в личном кабинете для доступа ко всем услугам</p>
+        <div class="cta-buttons">
+            <a href="/login" class="btn btn-primary pulse" id="cta-login-btn">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>Войти</span>
+            </a>
+            <a href="/" class="btn btn-primary pulse" id="cta-profile-btn" style="display: none;">
+                <i class="fas fa-user"></i>
+                <span>Личный кабинет</span>
+            </a>
+            <a href="/register" class="btn btn-outline pulse" id="cta-register-btn">
+                <i class="fas fa-user-plus"></i>
+                <span>Регистрация</span>
+            </a>
+        </div>
+    </div>
+</section>
 
-    <!-- Подвал -->
-    <footer class="footer">
-        <div class="footer__content">
+<script>
+// Функция обновления CTA блока
+function updateCTASection() {
+    const token = localStorage.getItem('token');
+    const userData = JSON.parse(localStorage.getItem('user')) || {};
+    
+    const loginBtn = document.getElementById('cta-login-btn');
+    const profileBtn = document.getElementById('cta-profile-btn');
+    const registerBtn = document.getElementById('cta-register-btn');
+    const ctaTitle = document.getElementById('cta-title');
+    const ctaText = document.getElementById('cta-text');
+
+    if (token) {
+        // Пользователь авторизован
+        ctaTitle.textContent = `Добро пожаловать${userData.username ? ', ' + userData.username : ''}!`;
+        ctaText.textContent = 'Используйте все возможности личного кабинета';
+        loginBtn.style.display = 'none';
+        profileBtn.style.display = 'inline-block';
+        registerBtn.style.display = 'none';
+    } else {
+        // Пользователь не авторизован
+        ctaTitle.textContent = 'Хотите стать нашим клиентом?';
+        ctaText.textContent = 'Зарегистрируйтесь в личном кабинете для доступа ко всем услугам';
+        loginBtn.style.display = 'inline-block';
+        profileBtn.style.display = 'none';
+        registerBtn.style.display = 'inline-block';
+    }
+}
+
+// Обновляем CTA при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    updateCTASection();
+});
+
+// Основная функция обновления CTA
+function updateCTA() {
+    const authToken = localStorage.getItem('token');
+    const userData = JSON.parse(localStorage.getItem('user'));
+    
+    if (authToken && userData) {
+        // Пользователь авторизован
+        document.getElementById('guest-cta').style.display = 'none';
+        document.getElementById('user-cta').style.display = 'block';
+        
+        // Персонализация приветствия
+        document.getElementById('cta-username').textContent = userData.username || 'клиент';
+        
+        // Загрузка персональных предложений
+        fetchPersonalizedContent();
+    } else {
+        // Гость
+        document.getElementById('guest-cta').style.display = 'block';
+        document.getElementById('user-cta').style.display = 'none';
+    }
+}
+
+// Загрузка персонального контента
+async function fetchPersonalizedContent() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/personal/offers`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.message) {
+                document.getElementById('cta-personal-message').textContent = data.message;
+            }
+            if (data.link) {
+                document.getElementById('cta-offers-btn').href = data.link;
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching personalized content:', error);
+    }
+}
+
+// Настройка обработчиков событий
+function setupCTAListeners() {
+    // Обработчик для кнопки выхода
+    document.querySelectorAll('.logout-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            logout();
+            updateCTA();
+        });
+    });
+}
+
+// Интеграция с вашими функциями авторизации
+const originalLoginUser = loginUser;
+loginUser = async function(email, password) {
+    try {
+        await originalLoginUser(email, password);
+        updateCTA();
+    } catch (error) {
+        console.error('Login failed:', error);
+        throw error;
+    }
+};
+
+const originalLogout = logout;
+logout = function() {
+    originalLogout();
+    updateCTA();
+};
+</script>
+
+
+    <!-- Анимированный футер -->
+    <footer class="footer slide-up">
+        <div class="footer-container">
             <div class="footer__info">
-                <img src="images/logo-white.png" alt="Россети" class="footer-logo">
-                <p>© 2025 ПАО «Россети». Все права защищены.</p>
+                <div class="footer-logo">
+                    <img src="/static/images/logo-white.png" alt="Россети">
+                    <span>Россети</span>
+                </div>
+                <p class="footer-text">© 2025 ПАО «Россети». Все права защищены.</p>
+                <p class="footer-text"><i class="fas fa-map-marker-alt footer-icon"></i> Москва, ул. Примерная, д. 1</p>
+                <p class="footer-text"><i class="fas fa-phone footer-icon"></i> +7 (495) 123-45-67</p>
+                
                 <div class="social-links">
-                    <a href="#"><i class="fab fa-vk"></i></a>
-                    <a href="#"><i class="fab fa-telegram"></i></a>
-                    <a href="#"><i class="fab fa-youtube"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-vk"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-telegram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
                 </div>
             </div>
             <div class="footer__links">
                 <div class="links-column">
-                    <h4>Компания</h4>
-                    <a href="#">О нас</a>
-                    <a href="#">Руководство</a>
-                    <a href="#">Пресс-центр</a>
+                    <h4 class="links-title">Компания</h4>
+                    <a href="#" class="footer-link">О нас</a>
+                    <a href="#" class="footer-link">Руководство</a>
+                    <a href="#" class="footer-link">Пресс-центр</a>
                 </div>
                 <div class="links-column">
-                    <h4>Клиентам</h4>
-                    <a href="#">Услуги</a>
-                    <a href="#">Тарифы</a>
-                    <a href="#">Документы</a>
+                    <h4 class="links-title">Клиентам</h4>
+                    <a href="#" class="footer-link">Услуги</a>
+                    <a href="#" class="footer-link">Тарифы</a>
+                    <a href="#" class="footer-link">Документы</a>
                 </div>
                 <div class="links-column">
-                    <h4>Контакты</h4>
-                    <a href="#">Офисы</a>
-                    <a href="#">Телефоны</a>
-                    <a href="#">Обратная связь</a>
+                    <h4 class="links-title">Контакты</h4>
+                    <a href="#" class="footer-link">Офисы</a>
+                    <a href="#" class="footer-link">Телефоны</a>
+                    <a href="#" class="footer-link">Обратная связь</a>
                 </div>
             </div>
         </div>
-        <div class="footer__links a">
-            <a href="#">Политика конфиденциальности</a>
-            <a href="#">Пользовательское соглашение</a>
+        <div class="footer-bottom">
+            <a href="#" class="footer-legal">Политика конфиденциальности</a>
+            <a href="#" class="footer-legal">Пользовательское соглашение</a>
         </div>
     </footer>
 
+    <!-- Скрипты с улучшенными анимациями -->
     <script src="/static/script.js"></script>
+    <script>
+        // Анимация клика по кнопкам
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                // Эффект волны
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple-effect');
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size/2;
+                const y = e.clientY - rect.top - size/2;
+                
+                ripple.style.width = ripple.style.height = `${size}px`;
+                ripple.style.left = `${x}px`;
+                ripple.style.top = `${y}px`;
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+                
+                // Анимация загрузки
+                if (this.classList.contains('btn-loading')) return;
+                const btnText = this.querySelector('.btn-text');
+                if (btnText) {
+                    this.classList.add('btn-loading');
+                    btnText.style.visibility = 'hidden';
+                    setTimeout(() => {
+                        this.classList.remove('btn-loading');
+                        btnText.style.visibility = 'visible';
+                    }, 2000);
+                }
+            });
+        });
+
+        // Параллакс-эффект для героя
+        window.addEventListener('scroll', function() {
+            const scrollPosition = window.pageYOffset;
+            const hero = document.querySelector('.about-banner');
+            if (hero) {
+                hero.style.backgroundPositionY = scrollPosition * 0.5 + 'px';
+            }
+        });
+
+        // Анимация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.body.classList.add('loaded');
+                
+                // Анимация появления элементов
+                const animatedElements = document.querySelectorAll('.pop-in, .fade-in, .slide-up');
+                animatedElements.forEach((el, index) => {
+                    setTimeout(() => {
+                        el.style.opacity = 1;
+                        el.style.transform = 'translateY(0)';
+                    }, 100 * index);
+                });
+                
+                // Анимация счетчиков
+                const counters = document.querySelectorAll('.stat-number');
+                const speed = 200;
+                
+                counters.forEach(counter => {
+                    const target = +counter.getAttribute('data-count');
+                    const count = +counter.innerText;
+                    const increment = target / speed;
+                    
+                    if (count < target) {
+                        counter.innerText = Math.ceil(count + increment);
+                        setTimeout(updateCount, 1);
+                    } else {
+                        counter.innerText = target + (target === 15 ? '+' : target === 220 ? ' тыс.' : ' млн');
+                    }
+                    
+                    function updateCount() {
+                        const count = +counter.innerText;
+                        const increment = target / speed;
+                        
+                        if (count < target) {
+                            counter.innerText = Math.ceil(count + increment);
+                            setTimeout(updateCount, 1);
+                        } else {
+                            counter.innerText = target + (target === 15 ? '+' : target === 220 ? ' тыс.' : ' млн');
+                        }
+                    }
+                });
+            }, 200);
+        });
+
+        // Анимация при наведении на карточки услуг
+        document.querySelectorAll('.service-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.querySelector('.service-hover').style.opacity = 1;
+                this.querySelector('.service-icon').style.transform = 'scale(1.2) rotate(10deg)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.querySelector('.service-hover').style.opacity = 0;
+                this.querySelector('.service-icon').style.transform = 'scale(1) rotate(0)';
+            });
+        });
+
+        // Анимация карты
+        const map = document.querySelector('.contact-map iframe');
+        if (map) {
+            map.addEventListener('mouseenter', function() {
+                document.querySelector('.map-overlay').style.opacity = 0;
+            });
+            
+            map.addEventListener('mouseleave', function() {
+                document.querySelector('.map-overlay').style.opacity = 0.3;
+            });
+        }
+    </script>
 </body>
 </html>

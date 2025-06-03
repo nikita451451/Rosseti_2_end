@@ -16,7 +16,9 @@ from app.auth import (
     get_password_hash,
     create_access_token,
     get_current_user,
-    verify_password
+    verify_password,
+    authenticate_user,
+    ACCESS_TOKEN_EXPIRE_MINUTES
 )
 from app.config import settings
 from app.models import User
@@ -209,7 +211,42 @@ class UserRegister(BaseModel):
 
 class UserRegister(UserCreate):
     confirm_password: str  # Добавляем поле подтверждения пароля
+
+async def authenticate_user(username: str, password: str, db: AsyncSession):
+    result = await db.execute(select(User).where(User.email == username))
+    user = result.scalar_one_or_none()
     
+    if not user or not verify_password(password, user.hashed_password):
+        return None
+    return user
+@auth_router.post("/login")
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: AsyncSession = Depends(get_db)
+):
+    user = await authenticate_user(form_data.username, form_data.password, db)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+        )
+    
+    access_token = create_access_token(
+        data={"sub": user.username},
+        expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "username": user.username,
+            "email": user.email
+        }
+    }
+
+# Подключите роутер один раз:
+app.include_router(auth_router, prefix="/api")
 @auth_router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register_user(
     user_data: UserRegister, 
@@ -266,32 +303,33 @@ async def register_user(
 # Регистрируем роутер
 app.include_router(auth_router)
 
-@auth_router.post("/login")
-async def login_user(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_db)
-):
-    result = await db.execute(select(User).where(User.email == form_data.username))
-    user = result.scalar_one_or_none()
+@app.post("/api/auth/login")
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    # Здесь должна быть проверка пользователя в базе данных
+    # Для примера используем фиктивного пользователя
+    fake_user = {
+        "username": "test",
+        "email": "test@example.com",
+        "password": get_password_hash("test")
+    }
     
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    if not verify_password(form_data.password, fake_user["password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticat": "Bearer"},
         )
     
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.email},
-        expires_delta=access_token_expires
+        data={"sub": fake_user["username"]}, expires_delta=access_token_expires
     )
-    
     return {
-        "token": access_token,
+        "access_token": access_token,
+        "token_type": "bearer",
         "user": {
-            "email": user.email,
-            "username": user.username
+            "username": fake_user["username"],
+            "email": fake_user["email"]
         }
     }
 @app.get("/api/healthcheck")

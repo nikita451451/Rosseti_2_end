@@ -1164,3 +1164,450 @@ input.error {
 .auth .quick-actions .action-card {
     display: flex;
 }
+/* ==================== Анимации и улучшения ==================== */
+
+/* Общие анимации */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+    100% { transform: scale(1); }
+}
+
+/* Анимация появления контента */
+.main-content,
+.about-container,
+.services-main,
+.news-main {
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+/* Улучшенные карточки */
+.category-card,
+.service-card,
+.stat-card,
+.news-card {
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    will-change: transform, box-shadow;
+}
+
+.category-card:hover,
+.service-card:hover,
+.stat-card:hover,
+.news-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* Эффект "волны" для кнопок */
+.btn-more, .btn-primary, .tab-btn, .page-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-more:after, .btn-primary:after, .tab-btn:after, .page-btn:after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+.btn-more:focus:not(:active)::after,
+.btn-primary:focus:not(:active)::after,
+.tab-btn:focus:not(:active)::after,
+.page-btn:focus:not(:active)::after {
+    animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(20, 20);
+        opacity: 0;
+    }
+}
+
+/* Параллакс-эффект для героев */
+.services-hero,
+.news-hero,
+.about-banner {
+    background-attachment: fixed;
+    position: relative;
+    overflow: hidden;
+}
+
+.services-hero::before,
+.news-hero::before,
+.about-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1;
+}
+
+.services-hero > *,
+.news-hero > *,
+.about-banner > * {
+    position: relative;
+    z-index: 2;
+}
+
+/* Анимация загрузки для кнопок */
+@keyframes buttonLoading {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn-loading:after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: buttonLoading 0.8s linear infinite;
+}
+
+/* Анимация табов */
+.tab-content {
+    animation: fadeIn 0.4s ease-out;
+}
+
+/* Улучшенные карточки быстрых действий */
+.action-card {
+    transition: all 0.3s ease;
+    transform-style: preserve-3d;
+}
+
+.action-card:hover {
+    transform: translateY(-5px) scale(1.03);
+}
+
+.action-card i {
+    transition: all 0.3s ease;
+}
+
+.action-card:hover i {
+    transform: scale(1.2);
+    color: var(--accent-color);
+}
+
+/* Анимация навигации */
+.header__nav ul li a {
+    position: relative;
+}
+
+.header__nav ul li a:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: white;
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.header__nav ul li a:hover:after,
+.header__nav ul li a.active:after {
+    width: calc(100% - 24px);
+}
+
+/* Анимация логотипа */
+.header__logo img {
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.header__logo:hover img {
+    transform: rotate(-5deg) scale(1.1);
+}
+
+/* Эффект "морфинга" для кнопок авторизации */
+#loginBtn, #registerBtn {
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+#loginBtn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#registerBtn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Анимация пагинации */
+.page-btn {
+    transition: all 0.3s ease;
+    min-width: 40px;
+}
+
+.page-btn:hover:not(.active) {
+    background: #f0f0f0;
+    transform: translateY(-2px);
+}
+
+.page-btn.active {
+    animation: pulse 1.5s infinite;
+}
+
+/* Современные тени */
+.header {
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Анимация появления элементов в сетке */
+.news-grid, .services-grid, .stats-grid {
+    perspective: 1000px;
+}
+
+.news-card, .service-card, .stat-card {
+    opacity: 0;
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+.news-card:nth-child(1) { animation-delay: 0.1s; }
+.news-card:nth-child(2) { animation-delay: 0.2s; }
+.news-card:nth-child(3) { animation-delay: 0.3s; }
+.news-card:nth-child(4) { animation-delay: 0.4s; }
+
+.service-card:nth-child(1) { animation-delay: 0.1s; }
+.service-card:nth-child(2) { animation-delay: 0.2s; }
+.service-card:nth-child(3) { animation-delay: 0.3s; }
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+
+/* Плавное появление контента */
+.content-section {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Анимация иконок в сайдбаре */
+.sidebar ul li a i {
+    transition: all 0.3s ease;
+}
+
+.sidebar ul li a:hover i {
+    transform: scale(1.2);
+    color: var(--accent-color);
+}
+
+/* Эффект при наведении на аватар */
+.avatar {
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.avatar:hover {
+    transform: scale(1.1) rotate(5deg);
+    color: var(--accent-color);
+}
+
+/* Анимация кнопки выхода */
+#userPanel button {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+#userPanel button:hover {
+    background-color: #e74c3c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Микро-взаимодействия для форм */
+.form-group input:focus {
+    box-shadow: 0 0 0 3px rgba(0, 102, 161, 0.2);
+    border-color: var(--accent-color);
+}
+
+/* Анимация загрузки */
+@keyframes dotPulse {
+    0%, 100% { opacity: 0.2; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(-5px); }
+}
+
+.loading-dots {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin: 20px 0;
+}
+
+.loading-dots span {
+    width: 10px;
+    height: 10px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    display: inline-block;
+    animation: dotPulse 1.4s infinite ease-in-out;
+}
+
+.loading-dots span:nth-child(1) { animation-delay: 0s; }
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+/* Адаптивные улучшения */
+@media (max-width: 768px) {
+    .services-hero,
+    .news-hero,
+    .about-banner {
+        background-attachment: scroll;
+    }
+    
+    .header__nav ul li a:after {
+        display: none;
+    }
+    
+    .action-card:hover {
+        transform: none;
+    }
+}
+
+/* Современные тени для карточек */
+.category-card,
+.service-card,
+.stat-card,
+.news-card {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 
+                0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Градиентные кнопки */
+.btn-more, .btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    background-size: 200% auto;
+    transition: all 0.4s ease;
+}
+
+.btn-more:hover, .btn-primary:hover {
+    background-position: right center;
+    transform: translateY(-2px);
+}
+
+/* Анимация иконок услуг */
+.category-icon i,
+.service-icon i {
+    transition: all 0.4s ease;
+}
+
+.category-card:hover .category-icon i,
+.service-card:hover .service-icon i {
+    transform: scale(1.2) rotate(5deg);
+    color: var(--accent-color);
+}
+
+/* Эффект "плавающего" заголовка */
+.news-hero h1,
+.services-hero h1,
+.about-banner h1 {
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Плавное появление футера */
+.footer {
+    animation: fadeIn 0.8s ease-out forwards;
+    animation-delay: 0.3s;
+    opacity: 0;
+}
+#register-cta-btn {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+#register-cta-btn.hidden {
+    opacity: 0;
+    transform: scale(0.9);
+    pointer-events: none;
+    display: none;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 576px) {
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+/* Общие стили CTA */
+.cta-section {
+    background: linear-gradient(135deg, #0066A1, #005a8e);
+    color: white;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.cta-title {
+    font-size: 2rem;
+    margin-bottom: 15px;
+}
+
+.cta-text {
+    font-size: 1.2rem;
+    margin-bottom: 30px;
+    opacity: 0.9;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .cta-title {
+        font-size: 1.5rem;
+    }
+    
+    .cta-text {
+        font-size: 1rem;
+    }
+    
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+}

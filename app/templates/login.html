@@ -10,7 +10,7 @@
 <body>
     <header class="header">
         <div class="header__logo">
-            <a href="index.html">
+            <a href="/">
                 <img src="/static/images/logo.png" alt="Логотип Россети">
             </a>
         </div>
@@ -69,5 +69,34 @@
     </footer>
 
     <script src="/static/script.js"></script>
+    <script>
+        // Анимация загрузки для кнопок
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function() {
+                if (this.classList.contains('btn-loading')) return;
+                this.classList.add('btn-loading');
+                setTimeout(() => {
+                    this.classList.remove('btn-loading');
+                }, 2000);
+            });
+        });
+    
+        // Плавный скролл для якорей
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    
+        // Анимация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.body.classList.add('loaded');
+            }, 200);
+        });
+    </script>
 </body>
 </html>
