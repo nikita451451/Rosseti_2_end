@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новости компании | Россети</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Анимированная шапка -->
+    <header class="header">
+        <div class="header__logo">
+            <a href="/" class="logo-link">
+                <img src="/static/images/logo.png" alt="Логотип Россети" class="logo-img pulse">
+            </a>
+        </div>
+        <nav class="header__nav">
+            <ul class="nav-list">
+                <li class="nav-item"><a href="/" class="nav-link"><i class="fas fa-home nav-icon"></i> Главная</a></li>
+                <li class="nav-item"><a href="/about" class="nav-link"><i class="fas fa-info-circle nav-icon"></i> О компании</a></li>
+                <li class="nav-item"><a href="/services" class="nav-link"><i class="fas fa-bolt nav-icon"></i> Услуги</a></li>
+                <li class="nav-item"><a href="/news" class="nav-link active"><i class="fas fa-newspaper nav-icon"></i> Новости</a></li>
+            </ul>
+        </nav>
+        <div class="header__auth">
+            <button id="loginBtn" class="auth-btn login-btn" onclick="location.href='/login'">
+                <i class="fas fa-sign-in-alt btn-icon"></i>
+                <span class="btn-text">Войти</span>
+            </button>
+            <button id="registerBtn" class="auth-btn register-btn" onclick="location.href='/register'">
+                <i class="fas fa-user-plus btn-icon"></i>
+                <span class="btn-text">Регистрация</span>
+            </button>
+            <div id="userPanel" class="user-panel" style="display: none;">
+                <span id="userName" class="user-name"></span>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Выйти</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Основной контент с параллакс-эффектом -->
+    <main class="news-main">
+        <section class="news-hero parallax">
+            <div class="hero-content">
+                <h1 class="hero-title slide-up">Новости компании</h1>
+                <p class="hero-subtitle slide-up delay-1">Актуальные события и последние обновления</p>
+            </div>
+        </section>
+
+        <!-- Фильтры с анимацией -->
+        <section class="news-filters fade-in">
+            <div class="filter-container">
+                <div class="filter-group">
+                    <label for="category" class="filter-label"><i class="fas fa-tag"></i> Категория:</label>
+                    <select id="category" class="filter-select">
+                        <option value="all">Все новости</option>
+                        <option value="events">События</option>
+                        <option value="innovations">Инновации</option>
+                        <option value="partners">Партнерство</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="year" class="filter-label"><i class="fas fa-calendar"></i> Год:</label>
+                    <select id="year" class="filter-select">
+                        <option value="2023">2023</option>
+                        <option value="2022">2022</option>
+                        <option value="2021">2021</option>
+                    </select>
+                </div>
+                <button class="filter-btn">
+                    <i class="fas fa-filter"></i>
+                    <span>Применить</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Сетка новостей с анимацией появления -->
+        <section class="news-grid">
+            <article class="news-card pop-in">
+                <div class="news-image">
+                    <img src="images/news1.jpg" alt="Новость 1" class="news-img">
+                    <span class="news-category pulse">Инновации</span>
+                    <div class="image-overlay"></div>
+                </div>
+                <div class="news-content">
+                    <time datetime="2023-05-15" class="news-date"><i class="far fa-clock"></i> 15 мая 2023</time>
+                    <h3 class="news-title">Внедрение новых технологий Smart Grid</h3>
+                    <p class="news-excerpt">Компания Россети начала масштабное внедрение интеллектуальных систем учета электроэнергии...</p>
+                    <a href="news-detail.html" class="read-more">
+                        <span>Читать далее</span>
+                        <i class="fas fa-arrow-right arrow-hover"></i>
+                    </a>
+                </div>
+            </article>
+
+            <article class="news-card pop-in delay-1">
+                <div class="news-image">
+                    <img src="images/news2.jpg" alt="Новость 2" class="news-img">
+                    <span class="news-category pulse">События</span>
+                    <div class="image-overlay"></div>
+                </div>
+                <div class="news-content">
+                    <time datetime="2023-04-28" class="news-date"><i class="far fa-clock"></i> 28 апреля 2023</time>
+                    <h3 class="news-title">Форум "Энергетика будущего"</h3>
+                    <p class="news-excerpt">Наши специалисты приняли участие в ежегодном международном форуме...</p>
+                    <a href="news-detail.html" class="read-more">
+                        <span>Читать далее</span>
+                        <i class="fas fa-arrow-right arrow-hover"></i>
+                    </a>
+                </div>
+            </article>
+
+            <article class="news-card pop-in delay-2">
+                <div class="news-image">
+                    <img src="images/news3.jpg" alt="Новость 3" class="news-img">
+                    <span class="news-category pulse">Партнерство</span>
+                    <div class="image-overlay"></div>
+                </div>
+                <div class="news-content">
+                    <time datetime="2023-03-10" class="news-date"><i class="far fa-clock"></i> 10 марта 2023</time>
+                    <h3 class="news-title">Сотрудничество с ведущими вузами</h3>
+                    <p class="news-excerpt">Подписаны соглашения о сотрудничестве с техническими университетами...</p>
+                    <a href="news-detail.html" class="read-more">
+                        <span>Читать далее</span>
+                        <i class="fas fa-arrow-right arrow-hover"></i>
+                    </a>
+                </div>
+            </article>
+        </section>
+
+        <!-- Пагинация с анимацией -->
+        <section class="news-pagination fade-in">
+            <div class="pagination-container">
+                <button class="page-btn active pulse">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn next">
+                    <span>Следующая</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Анимированный футер -->
+    <footer class="footer slide-up">
+        <div class="footer-container">
+            <div class="footer__info">
+                <div class="footer-logo">
+                    <img src="/static/images/logo-white.png" alt="Россети">
+                    <span>Россети</span>
+                </div>
+                <p class="footer-text">© 2025 Россети. Все права защищены.</p>
+                <p class="footer-text"><i class="fas fa-map-marker-alt footer-icon"></i> Москва, ул. Примерная, д. 1</p>
+                <p class="footer-text"><i class="fas fa-phone footer-icon"></i> +7 (495) 123-45-67</p>
+                
+                <div class="social-links">
+                    <a href="#" class="social-link"><i class="fab fa-vk"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-telegram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="footer__links">
+                <div class="links-column">
+                    <h4 class="links-title">Компания</h4>
+                    <a href="#" class="footer-link">О нас</a>
+                    <a href="#" class="footer-link">Руководство</a>
+                    <a href="#" class="footer-link">Пресс-центр</a>
+                </div>
+                <div class="links-column">
+                    <h4 class="links-title">Клиентам</h4>
+                    <a href="#" class="footer-link">Услуги</a>
+                    <a href="#" class="footer-link">Тарифы</a>
+                    <a href="#" class="footer-link">Документы</a>
+                </div>
+                <div class="links-column">
+                    <h4 class="links-title">Контакты</h4>
+                    <a href="#" class="footer-link">Офисы</a>
+                    <a href="#" class="footer-link">Телефоны</a>
+                    <a href="#" class="footer-link">Обратная связь</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <a href="#" class="footer-legal">Политика конфиденциальности</a>
+            <a href="#" class="footer-legal">Пользовательское соглашение</a>
+        </div>
+    </footer>
+
+    <!-- Скрипты с улучшенными анимациями -->
+    <script src="/static/script.js"></script>
+    <script>
+        // Анимация клика по кнопкам
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                // Эффект волны
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple-effect');
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size/2;
+                const y = e.clientY - rect.top - size/2;
+                
+                ripple.style.width = ripple.style.height = `${size}px`;
+                ripple.style.left = `${x}px`;
+                ripple.style.top = `${y}px`;
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+                
+                // Анимация загрузки
+                if (this.classList.contains('btn-loading')) return;
+                const btnText = this.querySelector('.btn-text');
+                if (btnText) {
+                    this.classList.add('btn-loading');
+                    btnText.style.visibility = 'hidden';
+                    setTimeout(() => {
+                        this.classList.remove('btn-loading');
+                        btnText.style.visibility = 'visible';
+                    }, 2000);
+                }
+            });
+        });
+
+        // Параллакс-эффект для героя
+        window.addEventListener('scroll', function() {
+            const scrollPosition = window.pageYOffset;
+            const hero = document.querySelector('.news-hero');
+            if (hero) {
+                hero.style.backgroundPositionY = scrollPosition * 0.5 + 'px';
+            }
+        });
+
+        // Анимация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.body.classList.add('loaded');
+                
+                // Анимация появления элементов
+                const animatedElements = document.querySelectorAll('.pop-in, .fade-in, .slide-up');
+                animatedElements.forEach((el, index) => {
+                    setTimeout(() => {
+                        el.style.opacity = 1;
+                        el.style.transform = 'translateY(0)';
+                    }, 100 * index);
+                });
+            }, 200);
+        });
+
+        // Анимация при наведении на карточки новостей
+        document.querySelectorAll('.news-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.querySelector('.image-overlay').style.opacity = 0.7;
+                this.querySelector('.news-img').style.transform = 'scale(1.05)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.querySelector('.image-overlay').style.opacity = 0;
+                this.querySelector('.news-img').style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -754,3 +754,120 @@ function showContent(sectionId) {
         activeSection.style.display = 'block';
     }
 }
+// ====================== Инициализация разделов ======================
+function initContentSections() {
+    // Профиль
+    document.getElementById('profile-content')?.addEventListener('show', loadProfile);
+    
+    // Приборы учета
+    document.getElementById('meters-content')?.addEventListener('show', loadMeters);
+    
+    // Подача показаний
+    document.getElementById('submitReadings-content')?.addEventListener('show', function() {
+        loadMeters();
+        document.getElementById('reading-date').valueAsDate = new Date();
+    });
+    
+    // История начислений
+    document.getElementById('history-content')?.addEventListener('show', function() {
+        loadPaymentHistory(document.getElementById('history-period').value);
+    });
+    
+    // Квитанции
+    document.getElementById('receipt-content')?.addEventListener('show', function() {
+        loadReceipts(document.getElementById('receipt-period').value);
+    });
+}
+
+// Обновляем функцию showContent для вызова событий при показе раздела
+function showContent(sectionId) {
+    const currentSection = document.querySelector('.content-section.active');
+    const targetSection = document.getElementById(sectionId + '-content');
+    
+    if (!targetSection || currentSection === targetSection) return;
+    
+    // Анимация исчезновения текущего раздела
+    if (currentSection) {
+        currentSection.style.opacity = 0;
+        currentSection.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            currentSection.classList.remove('active');
+            currentSection.style.display = 'none';
+            
+            // Анимация появления нового раздела
+            targetSection.style.display = 'block';
+            setTimeout(() => {
+                targetSection.classList.add('active');
+                targetSection.style.opacity = 1;
+                targetSection.style.transform = 'translateY(0)';
+                
+                // Вызываем событие показа для нового раздела
+                const event = new Event('show');
+                targetSection.dispatchEvent(event);
+            }, 50);
+        }, 300);
+    }
+}
+
+// ====================== Вспомогательные функции ======================
+function showError(message) {
+    const errorElement = document.createElement('div');
+    errorElement.className = 'alert error';
+    errorElement.innerHTML = `
+        <div class="alert-content">
+            <i class="fas fa-exclamation-circle alert-icon"></i>
+            <div class="alert-text">${message}</div>
+        </div>
+    `;
+    
+    // Добавляем сообщение в начало контента
+    const content = document.querySelector('.main-content');
+    if (content) {
+        content.insertBefore(errorElement, content.firstChild);
+        
+        // Удаляем сообщение через 5 секунд
+        setTimeout(() => {
+            errorElement.remove();
+        }, 5000);
+    }
+}
+
+function showSuccess(message) {
+    const successElement = document.createElement('div');
+    successElement.className = 'alert success';
+    successElement.innerHTML = `
+        <div class="alert-content">
+            <i class="fas fa-check-circle alert-icon"></i>
+            <div class="alert-text">${message}</div>
+        </div>
+    `;
+    
+    // Добавляем сообщение в начало контента
+    const content = document.querySelector('.main-content');
+    if (content) {
+        content.insertBefore(successElement, content.firstChild);
+        
+        // Удаляем сообщение через 5 секунд
+        setTimeout(() => {
+            successElement.remove();
+        }, 5000);
+    }
+}
+
+// Обновляем инициализацию
+document.addEventListener('DOMContentLoaded', () => {
+    // ... существующий код ...
+    
+    // Инициализация разделов
+    initContentSections();
+    setupEventListeners();
+    
+    // Если пользователь авторизован, загружаем данные для активного раздела
+    if (localStorage.getItem('token')) {
+        const activeSection = document.querySelector('.content-section.active');
+        if (activeSection) {
+            const event = new Event('show');
+            activeSection.dispatchEvent(event);
+        }
+    }
+});

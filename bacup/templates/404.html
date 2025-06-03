@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ОКАК - 404</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "Montserrat", sans-serif;
+            color: #fff;
+            background: #050505;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .app {
+            position: relative;
+            height: 100%;
+            width: 100%;
+        }
+        
+        .img-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 1920px;
+            margin: 0 auto;
+            animation: catAnim 1.5s ease forwards;
+        }
+        
+        .img-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .okak {
+            position: absolute;
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 900;
+            font-size: clamp(60px, 8vw, 115px);
+            text-align: center;
+            width: 100%;
+        }
+        
+        .error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            font-size: clamp(300px, 50vw, 750px);
+            font-weight: 900;
+            transform: translate(-50%, 800px);
+            animation: errorAnim 1.5s ease forwards;
+            line-height: 0.8;
+            color: rgba(255, 255, 255, 0.1);
+        }
+
+        .back-button {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 30px;
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 0.5s ease 1.5s forwards;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .back-button:hover {
+            background: white;
+            color: #050505;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+        
+        @keyframes catAnim {
+            0% {
+                transform: translateY(50%);
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes errorAnim {
+            100% {
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .okak {
+                bottom: 25%;
+                font-size: 50px;
+            }
+            
+            .error {
+                font-size: 250px;
+            }
+
+            .back-button {
+                top: 20px;
+                padding: 10px 20px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <a href="/" class="back-button">Вернуться на главную</a>
+        <div class="error">404</div>
+        <div class="img-container">
+            <img src="/static/images/cat.png" alt="Error cat illustration">
+            <h1 class="okak">ОКАК</h1>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет - Россети</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Шапка с анимацией -->
+    <header class="header">
+        <div class="header__logo">
+            <a href="/к">
+                <img src="/static/images/logo.png" alt="Логотип Россети">
+            </a>
+        </div>
+        <nav class="header__nav">
+            <ul class="nav-list">
+                <li class="nav-item"><a href="/" class="nav-link active"><i class="fas fa-home nav-icon"></i><span class="nav-text">Главная</span></a></li>
+                <li class="nav-item"><a href="/about" class="nav-link"><i class="fas fa-info-circle nav-icon"></i><span class="nav-text">О компании</span></a></li>
+                <li class="nav-item"><a href="/services" class="nav-link"><i class="fas fa-bolt nav-icon"></i><span class="nav-text">Услуги</span></a></li>
+                <li class="nav-item"><a href="/news" class="nav-link"><i class="fas fa-newspaper nav-icon"></i><span class="nav-text">Новости</span></a></li>
+            </ul>
+        </nav>
+        <div class="header__auth">
+            <button id="loginBtn" class="auth-btn login-btn" onclick="location.href='/login'">
+                <i class="fas fa-sign-in-alt btn-icon"></i>
+                <span class="btn-text">Войти</span>
+            </button>
+            <button id="registerBtn" class="auth-btn register-btn" onclick="location.href='/register'">
+                <i class="fas fa-user-plus btn-icon"></i>
+                <span class="btn-text">Регистрация</span>
+            </button>
+            <div id="userPanel" class="user-panel" style="display: none;">
+                <span id="userName" class="user-name"></span>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Выйти</span>
+                </button>
+            </div>
+        </div>
+        <div class="mobile-menu-toggle">
+            <i class="fas fa-bars"></i>
+        </div>
+    </header>
+
+    <!-- Основной контент с плавным появлением -->
+    <div class="container">
+        <div class="sidebar">
+            <div class="user-info">
+                <div class="avatar">
+                    <i class="fas fa-user-circle avatar-icon"></i>
+                    <div class="avatar-pulse"></div>
+                </div>
+                <h3 id="sidebarUserName" class="user-name">Гость</h3>
+                <p id="sidebarUserEmail" class="user-email">Не авторизован</p>
+            </div>
+            
+            <h2 class="sidebar-title"><i class="fas fa-bars title-icon"></i> Меню</h2>
+            <ul class="sidebar-menu">
+                <li class="menu-item">
+                    <a href="#" onclick="showContent('home')" class="menu-link active">
+                        <i class="fas fa-home menu-icon"></i>
+                        <span class="menu-text">Личный кабинет</span>
+                        <i class="fas fa-chevron-right arrow-icon"></i>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" onclick="showContent('profile')" class="menu-link">
+                        <i class="fas fa-user menu-icon"></i>
+                        <span class="menu-text">Профиль</span>
+                        <i class="fas fa-chevron-right arrow-icon"></i>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" onclick="showContent('submitReadings')" class="menu-link">
+                        <i class="fas fa-tachometer-alt menu-icon"></i>
+                        <span class="menu-text">Подать показания</span>
+                        <i class="fas fa-chevron-right arrow-icon"></i>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" onclick="showContent('meters')" class="menu-link">
+                        <i class="fas fa-bolt menu-icon"></i>
+                        <span class="menu-text">Приборы учёта</span>
+                        <i class="fas fa-chevron-right arrow-icon"></i>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" onclick="showContent('checkIPU')" class="menu-link">
+                        <i class="fas fa-search menu-icon"></i>
+                        <span class="menu-text">Проверка ИПУ</span>
+                        <i class="fas fa-chevron-right arrow-icon"></i>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" onclick="showContent('history')" class="menu-link">
+                        <i class="fas fa-history menu-icon"></i>
+                        <span class="menu-text">История начислений</span>
+                        <i class="fas fa-chevron-right arrow-icon"></i>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" onclick="showContent('receipt')" class="menu-link">
+                        <i class="fas fa-file-invoice menu-icon"></i>
+                        <span class="menu-text">Квитанции</span>
+                        <i class="fas fa-chevron-right arrow-icon"></i>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" onclick="showContent('certificate')" class="menu-link">
+                        <i class="fas fa-file-alt menu-icon"></i>
+                        <span class="menu-text">Справки</span>
+                        <i class="fas fa-chevron-right arrow-icon"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="container" id="main-container" style="display: none;">
+            <!-- Контент по умолчанию с анимацией -->
+            <div id="home-content" class="content-section active">
+                <div id="profile-content" class="content-section">
+                    <div class="content-header">
+                        <h2><i class="fas fa-user"></i> Профиль пользователя</h2>
+                    </div>
+                    <div class="profile-container">
+                        <div class="profile-info">
+                            <div class="info-card">
+                                <h3>Основная информация</h3>
+                                <div class="info-row">
+                                    <span class="info-label">Имя:</span>
+                                    <span id="profile-name" class="info-value">Не указано</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Email:</span>
+                                    <span id="profile-email" class="info-value">Не указан</span>
+                                </div>
+                            </div>
+                            <div class="info-card">
+                                <h3>Контактные данные</h3>
+                                <div class="info-row">
+                                    <span class="info-label">Телефон:</span>
+                                    <span id="profile-phone" class="info-value">Не указан</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Адрес:</span>
+                                    <span id="profile-address" class="info-value">Не указан</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="submitReadings-content" class="content-section">
+                    <div class="content-header">
+                        <h2><i class="fas fa-tachometer-alt"></i> Подать показания</h2>
+                    </div>
+                    <div class="readings-container">
+                        <div class="meter-selection">
+                            <label for="meter-select">Выберите прибор учета:</label>
+                            <select id="meter-select" class="form-select">
+                                <option value="">Загрузка приборов...</option>
+                            </select>
+                        </div>
+                        <div class="reading-form">
+                            <div class="form-group">
+                                <label for="reading-value">Текущие показания:</label>
+                                <input type="number" id="reading-value" class="form-input" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="reading-date">Дата показаний:</label>
+                                <input type="date" id="reading-date" class="form-input" value="">
+                            </div>
+                            <button id="submit-reading-btn" class="submit-btn">Отправить показания</button>
+                        </div>
+                        <div id="last-readings" class="last-readings">
+                            <h3>Последние показания</h3>
+                            <div id="readings-list" class="readings-list"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="meters-content" class="content-section">
+                    <div class="content-header">
+                        <h2><i class="fas fa-bolt"></i> Приборы учёта</h2>
+                        <button id="add-meter-btn" class="add-btn"><i class="fas fa-plus"></i> Добавить прибор</button>
+                    </div>
+                    <div class="meters-container">
+                        <div id="meters-list" class="cards-grid">
+                            <!-- Карточки приборов будут загружаться здесь -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="checkIPU-content" class="content-section">
+                    <div class="content-header">
+                        <h2><i class="fas fa-search"></i> Проверка ИПУ</h2>
+                    </div>
+                    <div class="ipu-container">
+                        <div class="check-form">
+                            <div class="form-group">
+                                <label for="meter-number">Номер прибора учета:</label>
+                                <input type="text" id="meter-number" class="form-input" placeholder="Введите номер прибора">
+                            </div>
+                            <button id="check-ipu-btn" class="submit-btn">Проверить</button>
+                        </div>
+                        <div id="ipu-result" class="ipu-result">
+                            <div class="result-card">
+                                <h3>Результаты проверки</h3>
+                                <div id="ipu-result-content" class="result-content">
+                                    Введите номер прибора учета для проверки
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="history-content" class="content-section">
+                    <div class="content-header">
+                        <h2><i class="fas fa-history"></i> История начислений</h2>
+                        <div class="period-selector">
+                            <label for="history-period">Период:</label>
+                            <select id="history-period" class="form-select">
+                                <option value="1">Последний месяц</option>
+                                <option value="3">3 месяца</option>
+                                <option value="6">6 месяцев</option>
+                                <option value="12">1 год</option>
+                                <option value="0">Все время</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="history-container">
+                        <div id="history-chart" class="history-chart">
+                            <!-- График будет отображаться здесь -->
+                        </div>
+                        <div id="history-table" class="history-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Дата</th>
+                                        <th>Показания</th>
+                                        <th>Начислено</th>
+                                        <th>Статус</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body">
+                                    <!-- Данные таблицы будут загружаться здесь -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="receipt-content" class="content-section">
+                    <div class="content-header">
+                        <h2><i class="fas fa-file-invoice"></i> Квитанции</h2>
+                        <div class="period-selector">
+                            <label for="receipt-period">Период:</label>
+                            <select id="receipt-period" class="form-select">
+                                <option value="1">Последний месяц</option>
+                                <option value="3">3 месяца</option>
+                                <option value="6">6 месяцев</option>
+                                <option value="12">1 год</option>
+                                <option value="0">Все время</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="receipts-container">
+                        <div id="receipts-list" class="receipts-list">
+                            <!-- Список квитанций будет загружаться здесь -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="certificate-content" class="content-section">
+                    <div class="content-header">
+                        <h2><i class="fas fa-file-alt"></i> Справки</h2>
+                    </div>
+                    <div class="certificates-container">
+                        <div class="certificate-types">
+                            <div class="certificate-card" data-type="consumption">
+                                <i class="fas fa-chart-line"></i>
+                                <h3>О потреблении</h3>
+                                <p>Справка о потреблении электроэнергии за период</p>
+                            </div>
+                            <div class="certificate-card" data-type="payments">
+                                <i class="fas fa-ruble-sign"></i>
+                                <h3>О платежах</h3>
+                                <p>Справка о произведенных платежах за период</p>
+                            </div>
+                            <div class="certificate-card" data-type="no-debt">
+                                <i class="fas fa-check-circle"></i>
+                                <h3>Об отсутствии задолженности</h3>
+                                <p>Подтверждение отсутствия задолженности</p>
+                            </div>
+                        </div>
+                        <div id="certificate-form-container" class="certificate-form-container" style="display: none;">
+                            <h3 id="certificate-form-title">Запрос справки</h3>
+                            <form id="certificate-form" class="certificate-form">
+                                <div id="certificate-period-group" class="form-group">
+                                    <label for="certificate-period">Период:</label>
+                                    <div class="date-range">
+                                        <input type="date" id="certificate-start-date" class="form-input">
+                                        <span>до</span>
+                                        <input type="date" id="certificate-end-date" class="form-input">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="certificate-email">Email для отправки:</label>
+                                    <input type="email" id="certificate-email" class="form-input" placeholder="Введите ваш email">
+                                </div>
+                                <button type="submit" class="submit-btn">Запросить справку</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+    
+    <!-- Подвал с анимацией -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer__info">
+                <div class="footer-logo">
+                    <img src="/static/images/logo-white.png" alt="Россети">
+                    <span>Россети</span>
+                </div>
+                <p class="footer-text">© 2025 Россети. Все права защищены.</p>
+                <p class="footer-text"><i class="fas fa-map-marker-alt footer-icon"></i> Москва, ул. Примерная, д. 1</p>
+                <p class="footer-text"><i class="fas fa-phone footer-icon"></i> +7 (495) 123-45-67</p>
+                
+                <div class="social-links">
+                    <a href="#" class="social-link"><i class="fab fa-vk"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-telegram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="footer__links">
+                <div class="links-column">
+                    <h4 class="links-title">Компания</h4>
+                    <a href="#" class="footer-link">О нас</a>
+                    <a href="#" class="footer-link">Руководство</a>
+                    <a href="#" class="footer-link">Пресс-центр</a>
+                </div>
+                <div class="links-column">
+                    <h4 class="links-title">Клиентам</h4>
+                    <a href="#" class="footer-link">Услуги</a>
+                    <a href="#" class="footer-link">Тарифы</a>
+                    <a href="#" class="footer-link">Документы</a>
+                </div>
+                <div class="links-column">
+                    <h4 class="links-title">Контакты</h4>
+                    <a href="#" class="footer-link">Офисы</a>
+                    <a href="#" class="footer-link">Телефоны</a>
+                    <a href="#" class="footer-link">Обратная связь</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <a href="#" class="footer-legal">Политика конфиденциальности</a>
+            <a href="#" class="footer-legal">Пользовательское соглашение</a>
+        </div>
+    </footer>
+
+    <!-- JavaScript с улучшенными анимациями -->
+    <script>
+        // Анимация клика по кнопкам
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                // Эффект волны
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple-effect');
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size/2;
+                const y = e.clientY - rect.top - size/2;
+                
+                ripple.style.width = ripple.style.height = `${size}px`;
+                ripple.style.left = `${x}px`;
+                ripple.style.top = `${y}px`;
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+                
+                // Анимация загрузки
+                if (this.classList.contains('btn-loading')) return;
+                const btnText = this.querySelector('.btn-text');
+                if (btnText) {
+                    this.classList.add('btn-loading');
+                    btnText.style.visibility = 'hidden';
+                    setTimeout(() => {
+                        this.classList.remove('btn-loading');
+                        btnText.style.visibility = 'visible';
+                    }, 2000);
+                }
+            });
+        });
+
+        // Плавная прокрутка к якорям
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    window.scrollTo({
+                        top: target.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Анимация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.body.classList.add('loaded');
+                
+                // Анимация появления элементов
+                const animatedElements = document.querySelectorAll('.content-section, .sidebar, .header, .footer');
+                animatedElements.forEach((el, index) => {
+                    setTimeout(() => {
+                        el.style.opacity = 1;
+                        el.style.transform = 'translateY(0)';
+                    }, 100 * index);
+                });
+            }, 200);
+            
+            // Инициализация активного состояния меню
+            const menuLinks = document.querySelectorAll('.menu-link');
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    menuLinks.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        });
+        
+        // Функция для переключения разделов с анимацией
+        function showContent(sectionId) {
+            const currentSection = document.querySelector('.content-section.active');
+            const targetSection = document.getElementById(sectionId + '-content');
+            
+            if (!targetSection || currentSection === targetSection) return;
+            
+            // Анимация исчезновения текущего раздела
+            if (currentSection) {
+                currentSection.style.opacity = 0;
+                currentSection.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    currentSection.classList.remove('active');
+                    currentSection.style.display = 'none';
+                    
+                    // Анимация появления нового раздела
+                    targetSection.style.display = 'block';
+                    setTimeout(() => {
+                        targetSection.classList.add('active');
+                        targetSection.style.opacity = 1;
+                        targetSection.style.transform = 'translateY(0)';
+                    }, 50);
+                }, 300);
+            }
+        }
+    </script>
+<script></script>
+    <!-- Внешние скрипты -->
+    <script src="/static/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Услуги компании | Россети</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Анимированная шапка -->
+    <header class="header">
+        <div class="header__logo">
+            <a href="/" class="logo-link">
+                <img src="/static/images/logo.png" alt="Логотип Россети" class="logo-img pulse">
+            </a>
+        </div>
+        <nav class="header__nav">
+            <ul class="nav-list">
+                <li class="nav-item"><a href="/" class="nav-link"><i class="fas fa-home nav-icon"></i> Главная</a></li>
+                <li class="nav-item"><a href="/about" class="nav-link"><i class="fas fa-info-circle nav-icon"></i> О компании</a></li>
+                <li class="nav-item"><a href="/services" class="nav-link active"><i class="fas fa-bolt nav-icon"></i> Услуги</a></li>
+                <li class="nav-item"><a href="/news" class="nav-link"><i class="fas fa-newspaper nav-icon"></i> Новости</a></li>
+            </ul>
+        </nav>
+        <div class="header__auth">
+            <button id="loginBtn" class="auth-btn login-btn" onclick="location.href='/login'">
+                <i class="fas fa-sign-in-alt btn-icon"></i>
+                <span class="btn-text">Войти</span>
+            </button>
+            <button id="registerBtn" class="auth-btn register-btn" onclick="location.href='/register'">
+                <i class="fas fa-user-plus btn-icon"></i>
+                <span class="btn-text">Регистрация</span>
+            </button>
+            <div id="userPanel" class="user-panel" style="display: none;">
+                <span id="userName" class="user-name"></span>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Выйти</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Основной контент с параллакс-эффектом -->
+    <main class="services-main">
+        <section class="services-hero parallax">
+            <div class="hero-content">
+                <h1 class="hero-title slide-up">Наши услуги</h1>
+                <p class="hero-subtitle slide-up delay-1">Комплексные решения для вашего бизнеса и дома</p>
+            </div>
+        </section>
+
+        <!-- Категории услуг с анимацией -->
+        <section class="services-categories">
+            <div class="category-card pop-in">
+                <div class="category-icon pulse">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h2 class="category-title">Электроснабжение</h2>
+                <ul class="category-list">
+                    <li><i class="fas fa-check"></i> Подключение к электросетям</li>
+                    <li><i class="fas fa-check"></i> Технологическое присоединение</li>
+                    <li><i class="fas fa-check"></i> Перераспределение мощности</li>
+                </ul>
+                <button class="btn-more">
+                    <span class="btn-text">Подробнее</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <div class="card-hover"></div>
+            </div>
+
+            <div class="category-card pop-in delay-1">
+                <div class="category-icon pulse">
+                    <i class="fas fa-solar-panel"></i>
+                </div>
+                <h2 class="category-title">Энергосервис</h2>
+                <ul class="category-list">
+                    <li><i class="fas fa-check"></i> Энергоаудит</li>
+                    <li><i class="fas fa-check"></i> Оптимизация потребления</li>
+                    <li><i class="fas fa-check"></i> Внедрение Smart Grid</li>
+                </ul>
+                <button class="btn-more">
+                    <span class="btn-text">Подробнее</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <div class="card-hover"></div>
+            </div>
+
+            <div class="category-card pop-in delay-2">
+                <div class="category-icon pulse">
+                    <i class="fas fa-tools"></i>
+                </div>
+                <h2 class="category-title">Техобслуживание</h2>
+                <ul class="category-list">
+                    <li><i class="fas fa-check"></i> Диагностика оборудования</li>
+                    <li><i class="fas fa-check"></i> Ремонтные работы</li>
+                    <li><i class="fas fa-check"></i> Аварийное обслуживание</li>
+                </ul>
+                <button class="btn-more">
+                    <span class="btn-text">Подробнее</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <div class="card-hover"></div>
+            </div>
+        </section>
+
+        <!-- Детали услуг с табами -->
+        <section class="service-details fade-in">
+            <h2 class="section-title">Подробнее о наших услугах</h2>
+            <div class="tabs">
+                <button class="tab-btn active pulse" data-tab="tab1">
+                    <i class="fas fa-plug"></i>
+                    <span>Технологическое присоединение</span>
+                </button>
+                <button class="tab-btn" data-tab="tab2">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Энергоаудит</span>
+                </button>
+                <button class="tab-btn" data-tab="tab3">
+                    <i class="fas fa-microchip"></i>
+                    <span>Smart решения</span>
+                </button>
+            </div>
+            
+            <div class="tab-content active" id="tab1">
+                <h3 class="content-title">Технологическое присоединение</h3>
+                <p class="content-text">Полный комплекс услуг по подключению к электрическим сетям...</p>
+                <ul class="content-list">
+                    <li><i class="fas fa-check-circle"></i> Сроки подключения от 30 дней</li>
+                    <li><i class="fas fa-check-circle"></i> Мощность до 150 кВт</li>
+                    <li><i class="fas fa-check-circle"></i> Сопровождение на всех этапах</li>
+                </ul>
+                <button class="btn-request">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Оставить заявку</span>
+                </button>
+            </div>
+            
+            <div class="tab-content" id="tab2">
+                <h3 class="content-title">Энергоаудит</h3>
+                <p class="content-text">Профессиональный анализ энергопотребления...</p>
+                <button class="btn-request">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Оставить заявку</span>
+                </button>
+            </div>
+            
+            <div class="tab-content" id="tab3">
+                <h3 class="content-title">Smart решения</h3>
+                <p class="content-text">Внедрение интеллектуальных систем учета...</p>
+                <button class="btn-request">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Оставить заявку</span>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Анимированный футер -->
+    <footer class="footer slide-up">
+        <div class="footer-container">
+            <div class="footer__info">
+                <div class="footer-logo">
+                    <img src="/static/images/logo-white.png" alt="Россети">
+                    <span>Россети</span>
+                </div>
+                <p class="footer-text">© 2025 Россети. Все права защищены.</p>
+                <p class="footer-text"><i class="fas fa-map-marker-alt footer-icon"></i> Москва, ул. Примерная, д. 1</p>
+                <p class="footer-text"><i class="fas fa-phone footer-icon"></i> +7 (495) 123-45-67</p>
+                
+                <div class="social-links">
+                    <a href="#" class="social-link"><i class="fab fa-vk"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-telegram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="footer__links">
+                <div class="links-column">
+                    <h4 class="links-title">Компания</h4>
+                    <a href="#" class="footer-link">О нас</a>
+                    <a href="#" class="footer-link">Руководство</a>
+                    <a href="#" class="footer-link">Пресс-центр</a>
+                </div>
+                <div class="links-column">
+                    <h4 class="links-title">Клиентам</h4>
+                    <a href="#" class="footer-link">Услуги</a>
+                    <a href="#" class="footer-link">Тарифы</a>
+                    <a href="#" class="footer-link">Документы</a>
+                </div>
+                <div class="links-column">
+                    <h4 class="links-title">Контакты</h4>
+                    <a href="#" class="footer-link">Офисы</a>
+                    <a href="#" class="footer-link">Телефоны</a>
+                    <a href="#" class="footer-link">Обратная связь</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <a href="#" class="footer-legal">Политика конфиденциальности</a>
+            <a href="#" class="footer-legal">Пользовательское соглашение</a>
+        </div>
+    </footer>
+
+    <!-- Скрипты с улучшенными анимациями -->
+    <script src="/static/script.js"></script>
+    <script>
+        // Анимация клика по кнопкам
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                // Эффект волны
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple-effect');
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size/2;
+                const y = e.clientY - rect.top - size/2;
+                
+                ripple.style.width = ripple.style.height = `${size}px`;
+                ripple.style.left = `${x}px`;
+                ripple.style.top = `${y}px`;
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+                
+                // Анимация загрузки
+                if (this.classList.contains('btn-loading')) return;
+                const btnText = this.querySelector('.btn-text');
+                if (btnText) {
+                    this.classList.add('btn-loading');
+                    btnText.style.visibility = 'hidden';
+                    setTimeout(() => {
+                        this.classList.remove('btn-loading');
+                        btnText.style.visibility = 'visible';
+                    }, 2000);
+                }
+            });
+        });
+
+        // Параллакс-эффект для героя
+        window.addEventListener('scroll', function() {
+            const scrollPosition = window.pageYOffset;
+            const hero = document.querySelector('.services-hero');
+            if (hero) {
+                hero.style.backgroundPositionY = scrollPosition * 0.5 + 'px';
+            }
+        });
+
+        // Анимация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.body.classList.add('loaded');
+                
+                // Анимация появления элементов
+                const animatedElements = document.querySelectorAll('.pop-in, .fade-in, .slide-up');
+                animatedElements.forEach((el, index) => {
+                    setTimeout(() => {
+                        el.style.opacity = 1;
+                        el.style.transform = 'translateY(0)';
+                    }, 100 * index);
+                });
+            }, 200);
+            
+            // Переключение табов
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Удаляем активный класс у всех кнопок и контента
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Добавляем активный класс текущей кнопке и соответствующему контенту
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
+
+        // Анимация при наведении на карточки услуг
+        document.querySelectorAll('.category-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.querySelector('.card-hover').style.opacity = 1;
+                this.querySelector('.category-icon').style.transform = 'scale(1.2) rotate(10deg)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.querySelector('.card-hover').style.opacity = 0;
+                this.querySelector('.category-icon').style.transform = 'scale(1) rotate(0)';
+            });
+        });
+    </script>
+</body>
+</html>
