@@ -1,3 +1,4 @@
+import contextlib
 from fastapi import APIRouter, FastAPI, Depends, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -8,20 +9,25 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from datetime import timedelta
-from app.models import Base, User
-from app.schemas import UserCreate, UserResponse
+from datetime import date, timedelta
+from typing import List, Optional
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from app.schemas import Meter, Reading, UserCreate  
+# Импортируем модели правильно:
+from app.models import Base, Meter as MeterModel, Reading as ReadingModel, User  # SQLAlchemy-модели
+from app.schemas import MeterCreate, ReadingCreate, UserCreate, UserResponse, Meter as MeterSchema, Reading as ReadingSchema  # Pydantic-схемы
 from app.database import get_db
 from app.auth import (
     get_password_hash,
     create_access_token,
     get_current_user,
+    get_current_optional_user,
     verify_password,
     authenticate_user,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
 from app.config import settings
-from app.models import User
+
 app = FastAPI(prefix="/api")
 # Шаблоны и статические файлы
 templates = Jinja2Templates(directory="app/templates")
@@ -349,4 +355,274 @@ async def validate_token(current_user: User = Depends(get_current_user)):
 @app.exception_handler(404)
 async def not_found(request: Request, exc):
     return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
+ # Меню сайта 
+class MenuItem(Base):
+    __tablename__ = "menu_items"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    icon = Column(String)
+    path = Column(String)
+    parent_id = Column(Integer, ForeignKey("menu_items.id"), nullable=True)
+    is_active = Column(Boolean, default=True)
+    is_public = Column(Boolean, default=True)  # Добавлено новое поле
+    order = Column(Integer, default=0)
 
+class MenuItemCreate(BaseModel):
+    title: str
+    icon: str
+    path: str
+    parent_id: Optional[int] = None
+    is_active: bool = True
+    order: int = 0
+
+class MenuItemResponse(BaseModel):
+    id: int
+    title: str
+    icon: str
+    path: str
+    parent_id: Optional[int]
+    is_active: bool
+    order: int
+@app.get("/debug/menu-items")
+async def debug_menu_items(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(MenuItem))
+    items = result.scalars().all()
+    return {"count": len(items), "items": items}
+@app.get("/api/menu", response_model=List[MenuItemResponse])
+async def get_menu(
+    db: AsyncSession = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_optional_user)
+):
+    query = select(MenuItem).where(MenuItem.is_active == True)
+    
+    if not current_user:
+        query = query.where(MenuItem.is_public == True)
+    
+    result = await db.execute(query.order_by(MenuItem.order))
+    items = result.scalars().all()
+    return items
+
+@app.post("/api/menu", response_model=MenuItemResponse)
+async def create_menu_item(
+    item: MenuItemCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    new_item = MenuItem(**item.dict())
+    db.add(new_item)
+    await db.commit()
+    await db.refresh(new_item)
+    return new_item
+
+async def init_db(db: AsyncSession):
+    # Проверяем, есть ли нужные таблицы
+    for table in [MenuItem, MeterModel, ReadingModel]:
+        try:
+            await db.execute(select(table).limit(1))
+        except:
+            await db.run_sync(Base.metadata.create_all)
+
+    # Инициализация меню
+    result = await db.execute(select(MenuItem))
+    if not result.scalars().first():
+        default_menu = [
+        {"title": "Личный кабинет", "icon": "fa-home", "path": "#home", "order": 1},
+        {"title": "Профиль", "icon": "fa-user", "path": "#profile", "order": 2, "is_active": False},
+        {"title": "Подать показания", "icon": "fa-tachometer-alt", "path": "#submitReadings", "order": 3},
+        {"title": "Приборы учёта", "icon": "fa-bolt", "path": "#meters", "order": 4},
+        {"title": "Проверка ИПУ", "icon": "fa-search", "path": "#checkIPU", "order": 5},
+        {"title": "История начислений", "icon": "fa-history", "path": "#history", "order": 6},
+        {"title": "Квитанции", "icon": "fa-file-invoice", "path": "#receipt", "order": 7},
+        {"title": "Справки", "icon": "fa-file-alt", "path": "#certificate", "order": 8},
+    ]
+        db.add_all([MenuItem(**item) for item in default_menu])
+        await db.commit()
+    
+    await db.commit()
+
+@app.on_event("startup")
+async def on_startup():
+    # Получаем асинхронный генератор
+    db_gen = get_db()
+    try:
+        # Получаем сессию из генератора
+        db = await anext(db_gen)
+        await init_db(db)
+    finally:
+        # Закрываем генератор
+        await db_gen.aclose()
+
+@app.get("/api/menu", response_model=List[MenuItemResponse])
+async def get_menu(
+    db: AsyncSession = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_optional_user)
+):
+    query = select(MenuItem).where(MenuItem.is_active == True)
+    
+    # Если пользователь не авторизован, показываем только публичные пункты
+    if not current_user:
+        query = query.where(MenuItem.is_public == True)
+    
+    result = await db.execute(query.order_by(MenuItem.order))
+    return result.scalars().all()
+@app.post("/api/meters/", response_model=MeterSchema, tags=["meters"])
+async def create_meter(
+    meter: MeterCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    db_meter = MeterModel(**meter.dict(), user_id=current_user.id)
+    db.add(db_meter)
+    await db.commit()
+    await db.refresh(db_meter)
+    return MeterSchema.from_orm(db_meter)
+
+@app.get("/api/meters/", response_model=List[MeterSchema], tags=["meters"])
+async def read_meters(
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    result = await db.execute(
+        select(MeterModel)
+        .where(MeterModel.user_id == current_user.id)
+        .offset(skip)
+        .limit(limit)
+    )
+    meters = result.scalars().all()
+    return [MeterSchema.from_orm(meter) for meter in meters]
+
+@app.get("/api/meters/{meter_id}", response_model=MeterSchema, tags=["meters"])
+async def read_meter(
+    meter_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    result = await db.execute(
+        select(MeterModel)
+        .where(MeterModel.id == meter_id)
+        .where(MeterModel.user_id == current_user.id)
+    )
+    meter = result.scalar_one_or_none()
+    if meter is None:
+        raise HTTPException(status_code=404, detail="Meter not found")
+    return MeterSchema.from_orm(meter)
+
+@app.post("/api/readings/", response_model=ReadingSchema, tags=["readings"])
+async def create_reading(
+    reading: ReadingCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    meter_result = await db.execute(
+        select(MeterModel)
+        .where(MeterModel.id == reading.meter_id)
+        .where(MeterModel.user_id == current_user.id)
+    )
+    if meter_result.scalar_one_or_none() is None:
+        raise HTTPException(status_code=404, detail="Meter not found")
+    
+    db_reading = ReadingModel(**reading.dict())
+    db.add(db_reading)
+    await db.commit()
+    await db.refresh(db_reading)
+    return ReadingSchema.from_orm(db_reading)
+
+@app.get("/api/readings/", response_model=List[ReadingSchema], tags=["readings"])
+async def read_readings(
+    meter_id: int,
+    start_date: date = None,
+    end_date: date = None,
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    meter_result = await db.execute(
+        select(MeterModel)
+        .where(MeterModel.id == meter_id)
+        .where(MeterModel.user_id == current_user.id)
+    )
+    if meter_result.scalar_one_or_none() is None:
+        raise HTTPException(status_code=404, detail="Meter not found")
+    
+    query = select(ReadingModel).where(ReadingModel.meter_id == meter_id)
+    
+    if start_date:
+        query = query.where(ReadingModel.date >= start_date)
+    if end_date:
+        query = query.where(ReadingModel.date <= end_date)
+    
+    result = await db.execute(
+        query
+        .order_by(ReadingModel.date.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    readings = result.scalars().all()
+    return [ReadingSchema.from_orm(reading) for reading in readings]
+# Эндпоинты для работы с приборами учета
+@app.get("/api/meters", response_model=List[Meter])
+async def get_meters(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(Meter).where(Meter.user_id == current_user.id))
+    return result.scalars().all()
+
+@app.post("/api/meters", response_model=Meter)
+async def create_meter(
+    meter: MeterCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    db_meter = Meter(**meter.dict(), user_id=current_user.id)
+    db.add(db_meter)
+    await db.commit()
+    await db.refresh(db_meter)
+    return db_meter
+
+# Эндпоинты для работы с показаниями
+@app.get("/api/readings", response_model=List[Reading])
+async def get_readings(
+    meter_id: int = None,
+    start_date: date = None,
+    end_date: date = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    query = select(Reading)
+    
+    if meter_id:
+        # Проверяем, что прибор принадлежит пользователю
+        meter = await db.get(Meter, meter_id)
+        if not meter or meter.user_id != current_user.id:
+            raise HTTPException(status_code=404, detail="Meter not found")
+        query = query.where(Reading.meter_id == meter_id)
+    
+    if start_date:
+        query = query.where(Reading.date >= start_date)
+    if end_date:
+        query = query.where(Reading.date <= end_date)
+    
+    result = await db.execute(query.order_by(Reading.date.desc()))
+    return result.scalars().all()
+
+@app.post("/api/readings", response_model=Reading)
+async def create_reading(
+    reading: ReadingCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    # Проверяем, что прибор принадлежит пользователю
+    meter = await db.get(Meter, reading.meter_id)
+    if not meter or meter.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Meter not found")
+    
+    db_reading = Reading(**reading.dict())
+    db.add(db_reading)
+    await db.commit()
+    await db.refresh(db_reading)
+    return db_reading

@@ -7,6 +7,12 @@ const AUTH_ENDPOINTS = {
     validate: '/auth/validate-token'
 };
 
+// Унифицируем ключи для localStorage
+const STORAGE_KEYS = {
+    token: 'authToken',
+    user: 'userData'
+};
+
 // ====================== Основные функции аутентификации ======================
 async function registerUser(userData) {
     try {
@@ -36,164 +42,6 @@ async function registerUser(userData) {
     }
 }
 
-async function forgotPassword(email) {
-    try {
-        const response = await fetch(`${API_BASE_URL}${AUTH_ENDPOINTS.forgot}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email })
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Ошибка восстановления пароля');
-        }
-
-        return await response.json();
-    } catch (error) {
-        console.error('Forgot password error:', error);
-        throw error;
-    }
-}
-
-async function validateToken() {
-    const token = localStorage.getItem('authToken');
-    if (!token) return null;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}${AUTH_ENDPOINTS.validate}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Невалидный токен');
-        }
-
-        return await response.json();
-    } catch (error) {
-        console.error('Token validation error:', error);
-        localStorage.removeItem('authToken');
-        throw error;
-    }
-}
-
-// ====================== Обработчики событий ======================
-function handleLoginFormSubmit(e) {
-    e.preventDefault();
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
-    loginUser(email, password)
-        .catch(error => {
-            const errorElement = document.getElementById('login-error');
-            if (errorElement) {
-                errorElement.textContent = error.message;
-                errorElement.style.display = 'block';
-            }
-        });
-}
-
-function handleRegisterFormSubmit(e) {
-    e.preventDefault();
-    
-    const form = e.target;
-    const userData = {
-        username: form.username.value,
-        email: form.email.value,
-        password: form.password.value,
-        confirmPassword: form.confirm_password.value
-    };
-
-    registerUser(userData)
-        .then(data => {
-            alert(data.message || 'Регистрация успешна!');
-            window.location.href = '/login';
-        })
-        .catch(error => {
-            const errorElement = document.getElementById('register-error');
-            if (errorElement) {
-                errorElement.textContent = error.message;
-                errorElement.style.display = 'block';
-            }
-            
-            // Подсветка проблемных полей
-            if (error.message.includes('Email')) {
-                form.email.classList.add('error');
-            }
-            if (error.message.includes('имя пользователя')) {
-                form.username.classList.add('error');
-            }
-            if (error.message.includes('Пароли')) {
-                form.password.classList.add('error');
-                form.confirm_password.classList.add('error');
-            }
-        });
-}
-
-function handleForgotPasswordFormSubmit(e) {
-    e.preventDefault();
-    const email = document.getElementById('email').value;
-    const btn = document.getElementById('submitBtn');
-    const spinner = document.getElementById('spinner');
-    const btnText = document.getElementById('btnText');
-
-    if (btn) btn.disabled = true;
-    if (btnText) btnText.style.display = 'none';
-    if (spinner) spinner.style.display = 'block';
-
-    forgotPassword(email)
-        .then(() => {
-            alert('Письмо с инструкциями отправлено на ваш email');
-            window.location.href = '/login';
-        })
-        .catch(error => {
-            const errorElement = document.getElementById('error-message');
-            if (errorElement) {
-                errorElement.textContent = error.message;
-                errorElement.style.display = 'block';
-            }
-        })
-        .finally(() => {
-            if (btn) btn.disabled = false;
-            if (btnText) btnText.style.display = 'inline';
-            if (spinner) spinner.style.display = 'none';
-        });
-}
-
-// ====================== Вспомогательные функции ======================
-function togglePasswordVisibility(inputId, icon) {
-    const input = document.getElementById(inputId);
-    if (input) {
-        if (input.type === 'password') {
-            input.type = 'text';
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
-        } else {
-            input.type = 'password';
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
-        }
-    }
-}
-
-function checkAuthStatus() {
-    return validateToken()
-        .then(user => {
-            if (user) {
-                // Пользователь аутентифицирован
-                document.querySelectorAll('.auth-required').forEach(el => el.style.display = 'block');
-                document.querySelectorAll('.guest-required').forEach(el => el.style.display = 'none');
-                return true;
-            }
-            return false;
-        })
-        .catch(() => false);
-}
-
 async function loginUser(email, password) {
     try {
         const formData = new FormData();
@@ -211,8 +59,8 @@ async function loginUser(email, password) {
         }
 
         const data = await response.json();
-        localStorage.setItem('token', data.access_token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem(STORAGE_KEYS.token, data.access_token);
+        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(data.user));
         
         updateUI();
         window.location.href = '/';
@@ -228,12 +76,29 @@ async function loginUser(email, password) {
     }
 }
 
+async function checkAuthStatus() {
+    const token = localStorage.getItem(STORAGE_KEYS.token);
+    if (!token) return false;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/validate-token`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.ok;
+    } catch (error) {
+        console.error('Auth check error:', error);
+        return false;
+    }
+}
+
 function updateUI() {
-    const user = JSON.parse(localStorage.getItem('user'));
-    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem(STORAGE_KEYS.user));
+    const token = localStorage.getItem(STORAGE_KEYS.token);
     
     if (user && token) {
-        // Обновление шапки на всех страницах
+        // Показываем панель пользователя
         const userPanel = document.getElementById('userPanel');
         const loginBtn = document.getElementById('loginBtn');
         const registerBtn = document.getElementById('registerBtn');
@@ -242,25 +107,25 @@ function updateUI() {
         if (loginBtn) loginBtn.style.display = 'none';
         if (registerBtn) registerBtn.style.display = 'none';
         
-        // Обновление имени пользователя
+        // Обновляем имя пользователя
         const userNameEl = document.getElementById('userName');
         if (userNameEl) userNameEl.textContent = user.username;
         
-        // Обновление сайдбара (только если он есть на странице)
+        // Обновляем сайдбар
         const sidebarUserName = document.getElementById('sidebarUserName');
         const sidebarUserEmail = document.getElementById('sidebarUserEmail');
         if (sidebarUserName) sidebarUserName.textContent = user.username;
         if (sidebarUserEmail) sidebarUserEmail.textContent = user.email;
         
-        // Обновление приветствия (только на главной)
-        const welcomeHeader = document.getElementById('welcomeHeader');
-        if (welcomeHeader) welcomeHeader.textContent = `Добро пожаловать, ${user.username}!`;
+        // Скрываем гостевой контент
+        const guestContent = document.getElementById('guest-content');
+        const mainContent = document.getElementById('main-content');
+        if (guestContent) guestContent.style.display = 'none';
+        if (mainContent) mainContent.style.display = 'block';
         
-        // Скрытие информационного сообщения (только на главной)
-        const alertInfo = document.querySelector('.alert.info');
-        if (alertInfo) alertInfo.style.display = 'none';
+        loadMenu();
     } else {
-        // Если пользователь не авторизован, показываем кнопки входа
+        // Показываем кнопки входа
         const loginBtn = document.getElementById('loginBtn');
         const registerBtn = document.getElementById('registerBtn');
         const userPanel = document.getElementById('userPanel');
@@ -268,17 +133,35 @@ function updateUI() {
         if (loginBtn) loginBtn.style.display = 'block';
         if (registerBtn) registerBtn.style.display = 'block';
         if (userPanel) userPanel.style.display = 'none';
+        
+        // Показываем гостевой контент
+        const guestContent = document.getElementById('guest-content');
+        const mainContent = document.getElementById('main-content');
+        if (guestContent) guestContent.style.display = 'block';
+        if (mainContent) mainContent.style.display = 'none';
+        
+        loadMenu();
     }
 }
 
 function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.removeItem(STORAGE_KEYS.token);
+    localStorage.removeItem(STORAGE_KEYS.user);
     window.location.href = '/';
 }
 
 // ====================== Инициализация ======================
 document.addEventListener('DOMContentLoaded', () => {
+    // Проверяем статус аутентификации и обновляем UI
+    checkAuthStatus().then(isAuthenticated => {
+        if (isAuthenticated) {
+            updateUI();
+            showContent('home');
+        } else {
+            updateUI();
+        }
+    });
+
     // Инициализация форм
     if (document.getElementById('loginForm')) {
         document.getElementById('loginForm').addEventListener('submit', handleLoginFormSubmit);
@@ -302,21 +185,304 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+});
 
-    // Проверка статуса аутентификации
-    checkAuthStatus();
+// ================== МЕНЮ САЙТА =====================
+async function loadMenu() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/menu`);
+        if (!response.ok) {
+            throw new Error('Ошибка загрузки меню');
+        }
+        const menuItems = await response.json();
+        renderMenu(menuItems);
+    } catch (error) {
+        console.error('Menu loading error:', error);
+    }
+}
+
+function renderMenu(items) {
+    const menuContainer = document.querySelector('.sidebar-menu');
+    if (!menuContainer) return;
+
+    menuContainer.innerHTML = '';
+
+    const sortedItems = items
+        .filter(item => item.is_active)
+        .sort((a, b) => a.order - b.order);
+
+    // Получаем текущий раздел из URL
+    const currentSection = window.location.hash.substring(1) || 'home';
+
+    sortedItems.forEach(item => {
+        const menuItem = document.createElement('li');
+        menuItem.className = 'menu-item';
+        
+        const menuLink = document.createElement('a');
+        menuLink.href = item.path || '#';
+        
+        // Определяем активный элемент
+        const isActive = item.path === `#${currentSection}`;
+        menuLink.className = `menu-link ${isActive ? 'active' : ''}`;
+        
+        menuLink.onclick = function(e) {
+            if (item.path.startsWith('#')) {
+                e.preventDefault();
+                showContent(item.path.substring(1));
+                
+                // Обновляем активное состояние
+                document.querySelectorAll('.menu-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                this.classList.add('active');
+            }
+        };
+        
+        menuLink.innerHTML = `
+            <i class="fas ${item.icon} menu-icon"></i>
+            <span class="menu-text">${item.title}</span>
+            <i class="fas fa-chevron-right arrow-icon"></i>
+        `;
+        
+        menuItem.appendChild(menuLink);
+        menuContainer.appendChild(menuItem);
+    });
+}
+// Обновим инициализацию в DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+    loadMenu();
     updateUI();
 });
-function showContent(sectionId) {
-    // Скрываем все секции
-    const sections = document.querySelectorAll('.content-section');
-    sections.forEach(section => {
-        section.style.display = 'none';
+async function loadMenu() {
+    try {
+        const token = localStorage.getItem('token');
+        const headers = {};
+        
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/api/menu`, {
+            headers
+        });
+        
+        if (!response.ok) {
+            throw new Error('Ошибка загрузки меню');
+        }
+        
+        const menuItems = await response.json();
+        renderMenu(menuItems);
+    } catch (error) {
+        console.error('Menu loading error:', error);
+    }
+}
+// Функции для работы с приборами учета
+async function loadMeters() {
+    try {
+        const response = await fetch('/api/meters');
+        const meters = await response.json();
+        const tbody = document.querySelector('#metersTable tbody');
+        
+        tbody.innerHTML = '';
+        meters.forEach(meter => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${meter.number}</td>
+                <td>${meter.type}</td>
+                <td>${new Date(meter.installed_at).toLocaleDateString()}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary edit-meter" data-id="${meter.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger delete-meter" data-id="${meter.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error('Error loading meters:', error);
+    }
+}
+
+// Функции для работы с показаниями
+async function loadMetersForReadings() {
+    try {
+        const response = await fetch('/api/meters');
+        const meters = await response.json();
+        const select = document.getElementById('meter');
+        
+        select.innerHTML = '<option value="">Выберите прибор учета</option>';
+        meters.forEach(meter => {
+            const option = document.createElement('option');
+            option.value = meter.id;
+            option.textContent = `${meter.number} (${meter.type})`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading meters for readings:', error);
+    }
+}
+
+async function loadLastReadings() {
+    try {
+        const response = await fetch('/api/readings?limit=5');
+        const readings = await response.json();
+        const tbody = document.querySelector('#lastReadingsTable tbody');
+        
+        tbody.innerHTML = '';
+        readings.forEach(reading => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${new Date(reading.date).toLocaleDateString()}</td>
+                <td>Прибор ${reading.meter_id}</td>
+                <td>${reading.value}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error('Error loading last readings:', error);
+    }
+}
+
+// Обработчик отправки показаний
+document.getElementById('readingForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const reading = {
+        meter_id: parseInt(document.getElementById('meter').value),
+        value: parseFloat(document.getElementById('value').value),
+        date: document.getElementById('readingDate').value
+    };
+    
+    try {
+        const response = await fetch('/api/readings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(reading)
+        });
+        
+        if (response.ok) {
+            alert('Показания успешно отправлены!');
+            loadLastReadings();
+            document.getElementById('readingForm').reset();
+        } else {
+            throw new Error('Ошибка при отправке показаний');
+        }
+    } catch (error) {
+        console.error('Submit reading error:', error);
+        alert('Произошла ошибка: ' + error.message);
+    }
+});
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    // Загружаем данные при переходе на соответствующие разделы
+    document.querySelectorAll('.menu-link').forEach(link => {
+        link.addEventListener('click', function() {
+            const section = this.getAttribute('onclick').match(/'(\w+)'/)[1];
+            
+            if (section === 'submitReadings') {
+                loadMetersForReadings();
+                loadLastReadings();
+                document.getElementById('readingDate').valueAsDate = new Date();
+            } else if (section === 'meters') {
+                loadMeters();
+            }
+        });
     });
     
-    // Показываем запрошенную секцию
-    const activeSection = document.getElementById(sectionId + '-content');
-    if(activeSection) {
-        activeSection.style.display = 'block';
+    // Инициализация модального окна для приборов
+    document.getElementById('addMeterBtn').addEventListener('click', () => {
+        document.getElementById('meterForm').reset();
+        document.getElementById('installedAt').valueAsDate = new Date();
+        $('#meterModal').modal('show');
+    });
+    
+    document.getElementById('saveMeterBtn').addEventListener('click', async () => {
+        const meter = {
+            number: document.getElementById('meterNumber').value,
+            type: document.getElementById('meterType').value,
+            installed_at: document.getElementById('installedAt').value
+        };
+        
+        try {
+            const response = await fetch('/api/meters', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(meter)
+            });
+            
+            if (response.ok) {
+                $('#meterModal').modal('hide');
+                loadMeters();
+            } else {
+                throw new Error('Ошибка при сохранении прибора');
+            }
+        } catch (error) {
+            console.error('Save meter error:', error);
+            alert('Произошла ошибка: ' + error.message);
+        }
+    });
+});
+// Управление модальным окном
+document.getElementById('addMeterBtn').addEventListener('click', function() {
+    document.getElementById('meterModal').style.display = 'block';
+    document.body.style.overflow = 'hidden'; // Блокируем прокрутку страницы
+});
+
+document.querySelector('.modal-overlay, .close').addEventListener('click', function() {
+    document.getElementById('meterModal').style.display = 'none';
+    document.body.style.overflow = ''; // Восстанавливаем прокрутку
+});
+
+// Закрытие по ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.getElementById('meterModal').style.display = 'none';
+        document.body.style.overflow = '';
     }
+});
+
+// Предотвращаем закрытие при клике внутри модального окна
+document.querySelector('.modal-dialog').addEventListener('click', function(e) {
+    e.stopPropagation();
+});
+// Функция проверки авторизации
+function isAuthenticated() {
+    // Проверяем, есть ли в localStorage данные пользователя
+    return localStorage.getItem('userToken') !== null;
+    // Или можно проверять display userPanel
+    // return document.getElementById('userPanel').style.display !== 'none';
+}
+// Оригинальный код для открытия модального окна
+document.getElementById('addMeterBtn').addEventListener('click', function() {
+    if (!isAuthenticated()) {
+        showAuthRequiredMessage();
+        return;
+    }
+    document.getElementById('meterModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+});
+// Функция показа сообщения о необходимости авторизации
+function showAuthRequiredMessage() {
+    alert('Для выполнения этого действия необходимо войти в систему');
+    // Или можно показать красивое уведомление:
+    /*
+    const notification = document.createElement('div');
+    notification.className = 'auth-notification';
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Для доступа к этой функции требуется авторизация</span>
+            <div class="notification-actions">
+                <button onclick="location.href='/login'">Войти</button>
+                <button onclick="location.href='/register'">Зарегистрироваться</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 5000);
+    */
 }
