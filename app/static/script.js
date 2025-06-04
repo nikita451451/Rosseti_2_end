@@ -5,7 +5,45 @@ const AUTH_ENDPOINTS = {
     register: '/auth/register',
     forgot: '/auth/forgot-password',
     validate: '/auth/validate-token'
+    
 };
+
+// ====================== Вспомогательные функции ======================
+function showError(message) {
+    const errorElement = document.createElement('div');
+    errorElement.className = 'alert error';
+    errorElement.innerHTML = `
+        <i class="fas fa-exclamation-circle"></i>
+        ${message}
+    `;
+    
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+        mainContent.prepend(errorElement);
+    }
+    
+    setTimeout(() => {
+        errorElement.remove();
+    }, 5000);
+}
+
+function showSuccess(message) {
+    const successElement = document.createElement('div');
+    successElement.className = 'alert success';
+    successElement.innerHTML = `
+        <i class="fas fa-check-circle"></i>
+        ${message}
+    `;
+    
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+        mainContent.prepend(successElement);
+    }
+    
+    setTimeout(() => {
+        successElement.remove();
+    }, 5000);
+}
 
 // ====================== Основные функции аутентификации ======================
 async function registerUser(userData) {
@@ -59,7 +97,7 @@ async function forgotPassword(email) {
 }
 
 async function validateToken() {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     if (!token) return null;
 
     try {
@@ -76,7 +114,7 @@ async function validateToken() {
         return await response.json();
     } catch (error) {
         console.error('Token validation error:', error);
-        localStorage.removeItem('authToken');
+        localStorage.removeItem('token');
         throw error;
     }
 }
@@ -120,7 +158,6 @@ function handleRegisterFormSubmit(e) {
                 errorElement.style.display = 'block';
             }
             
-            // Подсветка проблемных полей
             if (error.message.includes('Email')) {
                 form.email.classList.add('error');
             }
@@ -163,84 +200,252 @@ function handleForgotPasswordFormSubmit(e) {
             if (spinner) spinner.style.display = 'none';
         });
 }
-function setupEventListeners() {
-    // Обработчик для кнопки отправки показаний
-    document.getElementById('submit-reading-btn')?.addEventListener('click', submitReading);
-    
-    // Обработчик для кнопки проверки ИПУ
-    document.getElementById('check-ipu-btn')?.addEventListener('click', checkIPU);
-    
-    // Обработчик изменения выбора прибора учета
-    document.getElementById('meter-select')?.addEventListener('change', function() {
-        if (this.value) {
-            loadLastReadings(this.value);
+
+// ====================== Функции профиля пользователя ======================
+async function loadProfile() {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('Пользователь не авторизован');
         }
-    });
-    
-    // Обработчики для истории начислений
-    document.getElementById('history-period')?.addEventListener('change', function() {
-        loadPaymentHistory(this.value);
-    });
-    
-    // Обработчики для квитанций
-    document.getElementById('receipt-period')?.addEventListener('change', function() {
-        loadReceipts(this.value);
-    });
-    
-    // Обработчики для справок
-    document.querySelectorAll('.certificate-card').forEach(card => {
-        card.addEventListener('click', function() {
-            const type = this.getAttribute('data-type');
-            const formContainer = document.getElementById('certificate-form-container');
-            const formTitle = document.getElementById('certificate-form-title');
-            
-            // Показываем соответствующую форму
-            formContainer.style.display = 'block';
-            
-            // Настраиваем форму в зависимости от типа справки
-            switch(type) {
-                case 'consumption':
-                    formTitle.textContent = 'Справка о потреблении';
-                    document.getElementById('certificate-period-group').style.display = 'block';
-                    break;
-                case 'payments':
-                    formTitle.textContent = 'Справка о платежах';
-                    document.getElementById('certificate-period-group').style.display = 'block';
-                    break;
-                case 'no-debt':
-                    formTitle.textContent = 'Справка об отсутствии задолженности';
-                    document.getElementById('certificate-period-group').style.display = 'none';
-                    break;
+
+        const response = await fetch(`${API_BASE_URL}/users/me`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
             }
-            
-            // Устанавливаем текущие даты по умолчанию
-            const endDate = new Date();
-            const startDate = new Date();
-            startDate.setMonth(endDate.getMonth() - 1);
-            
-            document.getElementById('certificate-start-date').valueAsDate = startDate;
-            document.getElementById('certificate-end-date').valueAsDate = endDate;
-            
-            // Устанавливаем email пользователя по умолчанию
-            const user = JSON.parse(localStorage.getItem('user'));
-            if (user?.email) {
-                document.getElementById('certificate-email').value = user.email;
-            }
-            
-            // Обработчик отправки формы
-            document.getElementById('certificate-form').onsubmit = function(e) {
-                e.preventDefault();
-                const startDate = document.getElementById('certificate-start-date').value;
-                const endDate = document.getElementById('certificate-end-date').value;
-                const email = document.getElementById('certificate-email').value;
-                
-                requestCertificate(type, startDate, endDate, email);
-            };
         });
-    });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || 'Ошибка загрузки профиля');
+        }
+        
+        const user = await response.json();
+        
+        document.getElementById('profileName').value = user.username || '';
+        document.getElementById('profileEmail').value = user.email || '';
+        document.getElementById('profilePhone').value = user.phone || '';
+        document.getElementById('profileAddress').value = user.address || '';
+        
+    } catch (error) {
+        console.error('Profile load error:', error);
+        showError(error.message || 'Не удалось загрузить профиль');
+    }
 }
 
-// ====================== Вспомогательные функции ======================
+function loadProfile() {
+    // Получаем сохраненные данные пользователя
+    const user = JSON.parse(localStorage.getItem('user'));
+    
+    if (user) {
+        // Заполняем поля формы данными из localStorage
+        document.getElementById('profileName').value = user.username || '';
+        document.getElementById('profileEmail').value = user.email || '';
+        document.getElementById('profilePhone').value = user.phone || '';
+        document.getElementById('profileAddress').value = user.address || '';
+    } else {
+        console.log('Данные пользователя не найдены');
+    }
+}
+
+// Упрощенная функция сохранения профиля
+async function saveProfile() {
+    const userData = {
+        username: document.getElementById('profileName').value,
+        email: document.getElementById('profileEmail').value,
+        phone: document.getElementById('profilePhone').value,
+        address: document.getElementById('profileAddress').value
+    };
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/me`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(userData)
+        });
+
+        if (!response.ok) {
+            throw new Error('Ошибка обновления профиля');
+        }
+
+        // Обновляем данные в localStorage
+        const currentUser = JSON.parse(localStorage.getItem('user'));
+        const updatedUser = {...currentUser, ...userData};
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        // Показываем сообщение об успехе
+        document.getElementById('profileSuccess').style.display = 'block';
+        setTimeout(() => {
+            document.getElementById('profileSuccess').style.display = 'none';
+        }, 3000);
+        
+    } catch (error) {
+        console.error('Ошибка сохранения:', error);
+        alert('Не удалось сохранить изменения');
+    }
+}
+
+// Вызываем загрузку профиля при открытии страницы
+document.addEventListener('DOMContentLoaded', () => {
+    // Проверяем, есть ли пользователь в localStorage
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+        console.log('Пользователь не авторизован');
+        return;
+    }
+    
+    // Если пользователь есть - заполняем профиль
+    loadProfile();
+});
+
+// ====================== Функции приборов учета ======================
+async function loadMeters() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/meters`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('Ошибка загрузки приборов');
+        
+        const meters = await response.json();
+        const metersList = document.getElementById('meters-list');
+        const meterSelect = document.getElementById('meter-select');
+        
+        metersList.innerHTML = '';
+        meterSelect.innerHTML = '';
+        
+        if (meters.length === 0) {
+            metersList.innerHTML = '<div class="empty-message">У вас нет зарегистрированных приборов учета</div>';
+            meterSelect.innerHTML = '<option value="">Нет доступных приборов</option>';
+            return;
+        }
+        
+        meters.forEach(meter => {
+            const option = document.createElement('option');
+            option.value = meter.id;
+            option.textContent = `${meter.type} (${meter.serial_number})`;
+            meterSelect.appendChild(option);
+
+            const meterCard = document.createElement('div');
+            meterCard.className = 'meter-card';
+            meterCard.innerHTML = `
+                <div class="meter-header">
+                    <h3>${meter.type}</h3>
+                    <span class="meter-status ${meter.is_active ? 'active' : 'inactive'}">
+                        ${meter.is_active ? 'Активен' : 'Неактивен'}
+                    </span>
+                </div>
+                <div class="meter-details">
+                    <div class="detail-row">
+                        <span>Серийный номер:</span>
+                        <span>${meter.serial_number}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Дата установки:</span>
+                        <span>${new Date(meter.installation_date).toLocaleDateString()}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Последние показания:</span>
+                        <span>${meter.last_reading || 'Нет данных'}</span>
+                    </div>
+                </div>
+                <div class="meter-actions">
+                    <button class="action-btn edit-btn" data-id="${meter.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete-btn" data-id="${meter.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            metersList.appendChild(meterCard);
+        });
+        
+    } catch (error) {
+        console.error('Meters load error:', error);
+        showError('Не удалось загрузить список приборов');
+    }
+}
+
+// ====================== Функции показаний ======================
+async function submitReading() {
+    const meterId = document.getElementById('meter-select').value;
+    const value = document.getElementById('reading-value').value;
+    const date = document.getElementById('reading-date').value;
+    
+    if (!meterId || !value || !date) {
+        showError('Заполните все поля');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/readings`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                meter_id: parseInt(meterId),
+                value: parseFloat(value),
+                date: date
+            })
+        });
+        
+        if (!response.ok) throw new Error('Ошибка отправки показаний');
+        
+        const result = await response.json();
+        showSuccess('Показания успешно отправлены');
+        loadLastReadings(meterId);
+        document.getElementById('reading-value').value = '';
+        
+    } catch (error) {
+        console.error('Submit reading error:', error);
+        showError('Не удалось отправить показания');
+    }
+}
+
+async function loadLastReadings(meterId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/readings?meter_id=${meterId}&limit=5`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('Ошибка загрузки показаний');
+        
+        const readings = await response.json();
+        const readingsList = document.getElementById('readings-list');
+        readingsList.innerHTML = '';
+        
+        if (readings.length === 0) {
+            readingsList.innerHTML = '<div class="empty-message">Нет данных о показаниях</div>';
+            return;
+        }
+        
+        readings.forEach(reading => {
+            const readingItem = document.createElement('div');
+            readingItem.className = 'reading-item';
+            readingItem.innerHTML = `
+                <span class="reading-date">${new Date(reading.date).toLocaleDateString()}</span>
+                <span class="reading-value">${reading.value}</span>
+            `;
+            readingsList.appendChild(readingItem);
+        });
+        
+    } catch (error) {
+        console.error('Readings load error:', error);
+        showError('Не удалось загрузить историю показаний');
+    }
+}
+
+// ====================== Другие функции ======================
 function togglePasswordVisibility(inputId, icon) {
     const input = document.getElementById(inputId);
     if (input) {
@@ -260,7 +465,6 @@ function checkAuthStatus() {
     return validateToken()
         .then(user => {
             if (user) {
-                // Пользователь аутентифицирован
                 document.querySelectorAll('.auth-required').forEach(el => el.style.display = 'block');
                 document.querySelectorAll('.guest-required').forEach(el => el.style.display = 'none');
                 return true;
@@ -309,7 +513,6 @@ function updateUI() {
     const token = localStorage.getItem('token');
     
     if (user && token) {
-        // Обновление шапки на всех страницах
         const userPanel = document.getElementById('userPanel');
         const loginBtn = document.getElementById('loginBtn');
         const registerBtn = document.getElementById('registerBtn');
@@ -318,25 +521,20 @@ function updateUI() {
         if (loginBtn) loginBtn.style.display = 'none';
         if (registerBtn) registerBtn.style.display = 'none';
         
-        // Обновление имени пользователя
         const userNameEl = document.getElementById('userName');
         if (userNameEl) userNameEl.textContent = user.username;
         
-        // Обновление сайдбара (только если он есть на странице)
         const sidebarUserName = document.getElementById('sidebarUserName');
         const sidebarUserEmail = document.getElementById('sidebarUserEmail');
         if (sidebarUserName) sidebarUserName.textContent = user.username;
         if (sidebarUserEmail) sidebarUserEmail.textContent = user.email;
         
-        // Обновление приветствия (только на главной)
         const welcomeHeader = document.getElementById('welcomeHeader');
         if (welcomeHeader) welcomeHeader.textContent = `Добро пожаловать, ${user.username}!`;
         
-        // Скрытие информационного сообщения (только на главной)
         const alertInfo = document.querySelector('.alert.info');
         if (alertInfo) alertInfo.style.display = 'none';
     } else {
-        // Если пользователь не авторизован, показываем кнопки входа
         const loginBtn = document.getElementById('loginBtn');
         const registerBtn = document.getElementById('registerBtn');
         const userPanel = document.getElementById('userPanel');
@@ -352,368 +550,25 @@ function logout() {
     localStorage.removeItem('user');
     window.location.href = '/';
 }
-// Загрузка профиля пользователя
-async function loadProfile() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/users/me`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-        
-        if (!response.ok) throw new Error('Ошибка загрузки профиля');
-        
-        const user = await response.json();
-        
-        // Обновляем данные в профиле
-        document.getElementById('profile-name').textContent = user.username || 'Не указано';
-        document.getElementById('profile-email').textContent = user.email || 'Не указан';
-        document.getElementById('profile-phone').textContent = user.phone || 'Не указан';
-        document.getElementById('profile-address').textContent = user.address || 'Не указан';
-        
-    } catch (error) {
-        console.error('Profile load error:', error);
-        showError('Не удалось загрузить данные профиля');
-    }
-}
 
-// Загрузка приборов учета
-async function loadMeters() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/meters`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-        
-        if (!response.ok) throw new Error('Ошибка загрузки приборов');
-        
-        const meters = await response.json();
-        const metersList = document.getElementById('meters-list');
-        const meterSelect = document.getElementById('meter-select');
-        
-        // Очищаем списки
-        metersList.innerHTML = '';
-        meterSelect.innerHTML = '';
-        
-        if (meters.length === 0) {
-            metersList.innerHTML = '<div class="empty-message">У вас нет зарегистрированных приборов учета</div>';
-            meterSelect.innerHTML = '<option value="">Нет доступных приборов</option>';
-            return;
-        }
-        
-        // Заполняем выпадающий список
-        meters.forEach(meter => {
-            const option = document.createElement('option');
-            option.value = meter.id;
-            option.textContent = `${meter.type} (${meter.serial_number})`;
-            meterSelect.appendChild(option);
-        });
-        
-        // Заполняем список приборов
-        meters.forEach(meter => {
-            const meterCard = document.createElement('div');
-            meterCard.className = 'meter-card';
-            meterCard.innerHTML = `
-                <div class="meter-header">
-                    <h3>${meter.type}</h3>
-                    <span class="meter-status ${meter.is_active ? 'active' : 'inactive'}">
-                        ${meter.is_active ? 'Активен' : 'Неактивен'}
-                    </span>
-                </div>
-                <div class="meter-details">
-                    <div class="detail-row">
-                        <span>Серийный номер:</span>
-                        <span>${meter.serial_number}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span>Дата установки:</span>
-                        <span>${new Date(meter.installation_date).toLocaleDateString()}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span>Последние показания:</span>
-                        <span>${meter.last_reading || 'Нет данных'}</span>
-                    </div>
-                </div>
-                <div class="meter-actions">
-                    <button class="action-btn edit-btn" data-id="${meter.id}">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="action-btn delete-btn" data-id="${meter.id}">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `;
-            metersList.appendChild(meterCard);
-        });
-        
-    } catch (error) {
-        console.error('Meters load error:', error);
-        showError('Не удалось загрузить список приборов');
-    }
-}
-
-// Подача показаний
-async function submitReading() {
-    const meterId = document.getElementById('meter-select').value;
-    const value = document.getElementById('reading-value').value;
-    const date = document.getElementById('reading-date').value;
+function showContent(sectionId) {
+    const sections = document.querySelectorAll('.content-section');
+    sections.forEach(section => {
+        section.style.display = 'none';
+    });
     
-    if (!meterId || !value || !date) {
-        showError('Заполните все поля');
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/readings`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
-                meter_id: parseInt(meterId),
-                value: parseFloat(value),
-                date: date
-            })
-        });
+    const activeSection = document.getElementById(sectionId + '-content');
+    if(activeSection) {
+        activeSection.style.display = 'block';
         
-        if (!response.ok) throw new Error('Ошибка отправки показаний');
-        
-        const result = await response.json();
-        showSuccess('Показания успешно отправлены');
-        loadLastReadings(meterId);
-        document.getElementById('reading-value').value = '';
-        
-    } catch (error) {
-        console.error('Submit reading error:', error);
-        showError('Не удалось отправить показания');
-    }
-}
-
-// Загрузка последних показаний
-async function loadLastReadings(meterId) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/readings?meter_id=${meterId}&limit=5`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-        
-        if (!response.ok) throw new Error('Ошибка загрузки показаний');
-        
-        const readings = await response.json();
-        const readingsList = document.getElementById('readings-list');
-        readingsList.innerHTML = '';
-        
-        if (readings.length === 0) {
-            readingsList.innerHTML = '<div class="empty-message">Нет данных о показаниях</div>';
-            return;
+        if (sectionId === 'profile') {
+            loadProfile();
         }
-        
-        readings.forEach(reading => {
-            const readingItem = document.createElement('div');
-            readingItem.className = 'reading-item';
-            readingItem.innerHTML = `
-                <span class="reading-date">${new Date(reading.date).toLocaleDateString()}</span>
-                <span class="reading-value">${reading.value}</span>
-            `;
-            readingsList.appendChild(readingItem);
-        });
-        
-    } catch (error) {
-        console.error('Readings load error:', error);
-        showError('Не удалось загрузить историю показаний');
     }
 }
 
-// Проверка ИПУ
-async function checkIPU() {
-    const meterNumber = document.getElementById('meter-number').value.trim();
-    
-    if (!meterNumber) {
-        showError('Введите номер прибора учета');
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/meters/check?serial_number=${meterNumber}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-        
-        if (!response.ok) throw new Error('Ошибка проверки ИПУ');
-        
-        const result = await response.json();
-        const resultContent = document.getElementById('ipu-result-content');
-        
-        if (result.is_valid) {
-            resultContent.innerHTML = `
-                <div class="success-message">
-                    <i class="fas fa-check-circle"></i>
-                    <p>Прибор учета с номером <strong>${meterNumber}</strong> прошел проверку</p>
-                </div>
-                <div class="ipu-details">
-                    <p><strong>Тип:</strong> ${result.type}</p>
-                    <p><strong>Дата поверки:</strong> ${new Date(result.verification_date).toLocaleDateString()}</p>
-                    <p><strong>Следующая поверка:</strong> ${new Date(result.next_verification_date).toLocaleDateString()}</p>
-                    <p><strong>Статус:</strong> <span class="status-active">Активен</span></p>
-                </div>
-            `;
-        } else {
-            resultContent.innerHTML = `
-                <div class="error-message">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <p>Прибор учета с номером <strong>${meterNumber}</strong> не прошел проверку</p>
-                </div>
-                <div class="ipu-details">
-                    <p><strong>Причина:</strong> ${result.reason || 'Неизвестная причина'}</p>
-                </div>
-            `;
-        }
-        
-    } catch (error) {
-        console.error('IPU check error:', error);
-        showError('Не удалось проверить прибор учета');
-    }
-}
-
-// Загрузка истории начислений
-async function loadPaymentHistory(period = 1) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/payments?period=${period}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-        
-        if (!response.ok) throw new Error('Ошибка загрузки истории');
-        
-        const history = await response.json();
-        const tableBody = document.getElementById('history-table-body');
-        tableBody.innerHTML = '';
-        
-        if (history.length === 0) {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="4" class="empty-message">Нет данных о начислениях</td>
-                </tr>
-            `;
-            return;
-        }
-        
-        history.forEach(payment => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${new Date(payment.date).toLocaleDateString()}</td>
-                <td>${payment.reading_value || '-'}</td>
-                <td>${payment.amount} руб.</td>
-                <td><span class="status-${payment.status}">${payment.status === 'paid' ? 'Оплачено' : 'Не оплачено'}</span></td>
-            `;
-            tableBody.appendChild(row);
-        });
-        
-        // Здесь можно добавить код для отрисовки графика (например, с помощью Chart.js)
-        
-    } catch (error) {
-        console.error('History load error:', error);
-        showError('Не удалось загрузить историю начислений');
-    }
-}
-
-// Загрузка квитанций
-async function loadReceipts(period = 1) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/receipts?period=${period}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-        
-        if (!response.ok) throw new Error('Ошибка загрузки квитанций');
-        
-        const receipts = await response.json();
-        const receiptsList = document.getElementById('receipts-list');
-        receiptsList.innerHTML = '';
-        
-        if (receipts.length === 0) {
-            receiptsList.innerHTML = '<div class="empty-message">Нет доступных квитанций</div>';
-            return;
-        }
-        
-        receipts.forEach(receipt => {
-            const receiptItem = document.createElement('div');
-            receiptItem.className = 'receipt-item';
-            receiptItem.innerHTML = `
-                <div class="receipt-header">
-                    <h3>Квитанция №${receipt.id}</h3>
-                    <span class="receipt-date">${new Date(receipt.date).toLocaleDateString()}</span>
-                </div>
-                <div class="receipt-details">
-                    <div class="detail-row">
-                        <span>Сумма:</span>
-                        <span>${receipt.amount} руб.</span>
-                    </div>
-                    <div class="detail-row">
-                        <span>Статус:</span>
-                        <span class="status-${receipt.status}">
-                            ${receipt.status === 'paid' ? 'Оплачено' : 'Не оплачено'}
-                        </span>
-                    </div>
-                </div>
-                <div class="receipt-actions">
-                    <button class="action-btn view-btn" data-id="${receipt.id}">
-                        <i class="fas fa-eye"></i> Просмотреть
-                    </button>
-                    ${receipt.status === 'unpaid' ? 
-                        `<button class="action-btn pay-btn" data-id="${receipt.id}">
-                            <i class="fas fa-ruble-sign"></i> Оплатить
-                        </button>` : ''}
-                    <button class="action-btn download-btn" data-id="${receipt.id}">
-                        <i class="fas fa-download"></i> Скачать
-                    </button>
-                </div>
-            `;
-            receiptsList.appendChild(receiptItem);
-        });
-        
-    } catch (error) {
-        console.error('Receipts load error:', error);
-        showError('Не удалось загрузить квитанции');
-    }
-}
-
-// Запрос справки
-async function requestCertificate(type, startDate, endDate, email) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/certificates`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
-                type: type,
-                start_date: startDate,
-                end_date: endDate,
-                email: email
-            })
-        });
-        
-        if (!response.ok) throw new Error('Ошибка запроса справки');
-        
-        const result = await response.json();
-        showSuccess('Справка успешно запрошена. Она будет отправлена на указанный email.');
-        
-    } catch (error) {
-        console.error('Certificate request error:', error);
-        showError('Не удалось запросить справку');
-    }
-}
 // ====================== Инициализация ======================
 document.addEventListener('DOMContentLoaded', () => {
-    // Инициализация форм
     if (document.getElementById('loginForm')) {
         document.getElementById('loginForm').addEventListener('submit', handleLoginFormSubmit);
     }
@@ -726,7 +581,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('forgotPasswordForm').addEventListener('submit', handleForgotPasswordFormSubmit);
     }
 
-    // Инициализация кнопок показа пароля
     document.querySelectorAll('.toggle-password').forEach(button => {
         button.addEventListener('click', () => {
             const input = button.closest('.form-group').querySelector('input[type="password"]');
@@ -737,20 +591,659 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Проверка статуса аутентификации
     checkAuthStatus();
     updateUI();
 });
-function showContent(sectionId) {
-    // Скрываем все секции
-    const sections = document.querySelectorAll('.content-section');
-    sections.forEach(section => {
-        section.style.display = 'none';
-    });
-    
-    // Показываем запрошенную секцию
-    const activeSection = document.getElementById(sectionId + '-content');
-    if(activeSection) {
-        activeSection.style.display = 'block';
+// ====================== Функции для работы с показаниями ======================
+window.meters = [];
+// Загружаем список приборов учета
+// Функция загрузки приборов
+async function loadMeters() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
+  
+      const response = await fetch('/api/meters', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+  
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+        return;
+      }
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      return await response.json();
+    } catch (error) {
+      console.error('Meters load error:', error);
+      showErrorNotification('Ошибка загрузки приборов');
+    }
+  }
+        
+        meters.forEach(meter => {
+            // Добавляем в выпадающий список
+            const option = document.createElement('option');
+            option.value = meter.id;
+            option.textContent = `${meter.type} (${meter.number})`;
+            meterSelect.appendChild(option);
+            
+            // Добавляем карточку прибора
+            const meterCard = document.createElement('div');
+            meterCard.className = 'meter-card';
+            meterCard.innerHTML = `
+                <div class="meter-header">
+                    <h3>${meter.type}</h3>
+                </div>
+                <div class="meter-details">
+                    <div class="detail-row">
+                        <span>Номер:</span>
+                        <span>${meter.number}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Дата установки:</span>
+                        <span>${new Date(meter.installed_at).toLocaleDateString()}</span>
+                    </div>
+                </div>
+                <div class="meter-actions">
+                    <button class="action-btn edit-btn" onclick="editMeter(${meter.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete-btn" onclick="deleteMeter(${meter.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            metersList.appendChild(meterCard);
+        });
+        
+// ===== Форма добавления прибора =====
+function showAddMeterForm() {
+    document.getElementById('addMeterForm').style.display = 'block';
+}
+
+function cancelAddMeter() {
+    document.getElementById('addMeterForm').style.display = 'none';
+}
+
+async function addMeter() {
+    const type = document.getElementById('meterType').value;
+    const number = document.getElementById('meterNumber').value.trim();
+    const installDate = document.getElementById('meterInstallDate').value;
+
+    if (!type || !number || !installDate) {
+        showAlert('Заполните все поля', 'error');
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+
+        const response = await fetch('/api/meters', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                type: type,
+                number: number,
+                installed_at: installDate
+            })
+        });
+
+        if (response.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+            return;
+        }
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Ошибка сервера');
+        }
+
+        const newMeter = await response.json();
+        meters.push(newMeter);
+        renderMeters();
+        
+        document.getElementById('addMeterForm').style.display = 'none';
+        document.getElementById('meterNumber').value = '';
+        document.getElementById('meterInstallDate').value = '';
+        document.getElementById('meterType').selectedIndex = 0;
+        
+        showAlert('Прибор успешно добавлен', 'success');
+    } catch (error) {
+        console.error('Ошибка:', error);
+        showAlert(error.message || 'Ошибка при добавлении прибора', 'error');
     }
 }
+
+// ===== Вспомогательные функции =====
+function getMeterIcon(type) {
+    const icons = {
+        'Электричество': 'fa-bolt',
+        'Вода': 'fa-tint',
+        'Газ': 'fa-fire'
+    };
+    const iconClass = icons[type] || 'fa-bolt';
+    return `<i class="fas ${iconClass}"></i>`;
+}
+
+function formatDate(dateString) {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString('ru-RU', options);
+}
+
+function showAlert(message, type = 'success') {
+    const alertDiv = document.getElementById('meterSuccess');
+    alertDiv.textContent = message;
+    alertDiv.className = `alert alert-${type}`;
+    alertDiv.style.display = 'block';
+    
+    setTimeout(() => {
+        alertDiv.style.display = 'none';
+    }, 3000);
+}
+
+// ===== Удаление прибора =====
+async function deleteMeter(meterId) {
+    if (!confirm('Вы уверены, что хотите удалить этот прибор?')) return;
+    
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+
+        const response = await fetch(`/api/meters/${meterId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error('Ошибка удаления прибора');
+        }
+
+        meters = meters.filter(m => m.id !== meterId);
+        renderMeters();
+        showAlert('Прибор успешно удален', 'success');
+    } catch (error) {
+        console.error('Ошибка:', error);
+        showAlert('Ошибка при удалении прибора', 'error');
+    }
+}
+  
+  // Инициализация при загрузке страницы
+  window.addEventListener('load', async () => {
+    const meters = await loadMeters(); // Теперь meters определена
+    
+    if (meters.length > 0) {
+      renderMeters(meters);
+    } else {
+      showEmptyState();
+    }
+  });
+  
+  function renderMeters(meters) {
+    const container = document.getElementById('meters-container');
+    if (!container) return;
+    
+    container.innerHTML = meters.map(meter => `
+      <div class="meter-card">
+        <h3>${meter.number}</h3>
+        <p>Тип: ${meter.type}</p>
+        <p>Дата установки: ${formatDate(meter.installed_at)}</p>
+      </div>
+    `).join('');
+  }
+  
+  function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString();
+  }
+// Отправка показаний
+async function submitReading() {
+    const meterId = document.getElementById('meterSelect').value;
+    const value = document.getElementById('readingValue').value;
+    const dateInput = document.getElementById('readingDate');
+    
+    // Валидация
+    if (!meterId || !value || !dateInput.value) {
+        document.getElementById('readingError').style.display = 'block';
+        setTimeout(() => {
+            document.getElementById('readingError').style.display = 'none';
+        }, 3000);
+        return;
+    }
+    
+    // Форматируем дату
+    const date = new Date(dateInput.value).toISOString().split('T')[0];
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/readings`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                meter_id: meterId,
+                value: parseFloat(value),
+                date: date
+            })
+        });
+        
+        if (!response.ok) throw new Error('Ошибка отправки показаний');
+        
+        // Показываем сообщение об успехе
+        document.getElementById('readingSuccess').style.display = 'block';
+        setTimeout(() => {
+            document.getElementById('readingSuccess').style.display = 'none';
+        }, 3000);
+        
+        // Очищаем поле значения
+        document.getElementById('readingValue').value = '';
+        
+        // Обновляем историю
+        loadReadingHistory(meterId);
+        
+    } catch (error) {
+        console.error('Submit reading error:', error);
+        showError('Не удалось отправить показания');
+    }
+}
+
+// Загрузка истории показаний
+async function loadReadingHistory(meterId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/readings?meter_id=${meterId}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('Ошибка загрузки истории');
+        
+        const readings = await response.json();
+        const historyTable = document.getElementById('readingHistory');
+        
+        // Очищаем таблицу
+        historyTable.innerHTML = '';
+        
+        if (readings.length === 0) {
+            historyTable.innerHTML = `
+                <tr>
+                    <td colspan="4" class="empty-message">Нет данных о показаниях</td>
+                </tr>
+            `;
+            return;
+        }
+        
+        // Заполняем таблицу
+        readings.forEach(reading => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${new Date(reading.date).toLocaleDateString()}</td>
+                <td>${reading.meter_type}</td>
+                <td>${reading.value}</td>
+                <td><span class="status-${reading.status || 'pending'}">${reading.status === 'accepted' ? 'Принято' : 'Ожидает проверки'}</span></td>
+            `;
+            historyTable.appendChild(row);
+        });
+        
+    } catch (error) {
+        console.error('History load error:', error);
+        showError('Не удалось загрузить историю показаний');
+    }
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    // Загружаем приборы учета
+    loadMeters();
+    
+    // Устанавливаем сегодняшнюю дату по умолчанию
+    document.getElementById('readingDate').valueAsDate = new Date();
+    
+    // Обработчик изменения выбора прибора
+    document.getElementById('meterSelect').addEventListener('change', function() {
+        if (this.value) {
+            loadReadingHistory(this.value);
+        }
+    });
+});
+// ===== Глобальные переменные =====
+let meters = [];
+
+// ===== Инициализация =====
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuthAndLoadMeters();
+});
+
+// ===== Функции аутентификации =====
+function checkAuthAndLoadMeters() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login';
+        return;
+    }
+    loadMeters();
+}
+
+// Показать форму добавления
+function showAddMeterForm() {
+    document.getElementById('addMeterForm').style.display = 'block';
+    document.getElementById('meterNumber').value = '';
+    document.getElementById('meterInstallDate').value = '';
+    document.getElementById('meterType').selectedIndex = 0;
+}
+
+// Скрыть форму добавления
+function cancelAddMeter() {
+    document.getElementById('addMeterForm').style.display = 'none';
+}
+
+// Добавить новый прибор
+async function addMeter() {
+    const type = document.getElementById('meterType').value;
+    const number = document.getElementById('meterNumber').value.trim();
+    const installDate = document.getElementById('meterInstallDate').value;
+    
+    // Валидация
+    if (!type || !number || !installDate) {
+        showAlert('Заполните все поля', 'error');
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/meters', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                type: type,
+                number: number,
+                installed_at: installDate
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+        
+        const newMeter = await response.json();
+        meters.push(newMeter);
+        renderMeters();
+        
+        document.getElementById('addMeterForm').style.display = 'none';
+        showAlert('Прибор успешно добавлен', 'success');
+    } catch (error) {
+        console.error('Ошибка при добавлении прибора:', error);
+        showAlert('Ошибка при добавлении прибора', 'error');
+    }
+}
+
+async function loadMeters() {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/meters`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error('Ошибка загрузки приборов');
+        }
+
+        const meters = await response.json();
+        renderMeters(meters);
+    } catch (error) {
+        console.error('Ошибка:', error);
+        showAlert('Ошибка загрузки приборов', 'error');
+    }
+}
+
+function renderMeters() {
+    const grid = document.getElementById('metersGrid');
+    if (!grid) return;
+
+    if (meters.length === 0) {
+        grid.innerHTML = '<div class="empty-state">Нет добавленных приборов учета</div>';
+        return;
+    }
+
+    grid.innerHTML = meters.map(meter => `
+        <div class="meter-card">
+            <div class="meter-icon">
+                ${getMeterIcon(meter.type)}
+            </div>
+            <div class="meter-info">
+                <h3>${meter.number}</h3>
+                <p><strong>Тип:</strong> ${meter.type}</p>
+                <p><strong>Дата установки:</strong> ${formatDate(meter.installed_at)}</p>
+            </div>
+            <div class="meter-actions">
+                <button class="btn-icon" onclick="editMeter('${meter.id}')">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-icon danger" onclick="deleteMeter('${meter.id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+
+// Отрисовка приборов
+function renderMeters() {
+    const grid = document.getElementById('metersGrid');
+    if (!grid) return;
+    
+    if (meters.length === 0) {
+        grid.innerHTML = '<div class="empty-state">Нет добавленных приборов учета</div>';
+        return;
+    }
+    
+    grid.innerHTML = meters.map(meter => `
+        <div class="meter-card">
+            <div class="meter-icon">
+                ${getMeterIcon(meter.type)}
+            </div>
+            <div class="meter-info">
+                <h3>${meter.number}</h3>
+                <p><strong>Тип:</strong> ${meter.type}</p>
+                <p><strong>Дата установки:</strong> ${formatDate(meter.installed_at)}</p>
+            </div>
+            <div class="meter-actions">
+                <button class="btn-icon" onclick="editMeter('${meter.id}')">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-icon danger" onclick="deleteMeter('${meter.id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Иконка в зависимости от типа прибора
+function getMeterIcon(type) {
+    const icons = {
+        'Электричество': 'fa-bolt',
+        'Вода': 'fa-tint',
+        'Газ': 'fa-fire'
+    };
+    const iconClass = icons[type] || 'fa-bolt';
+    return `<i class="fas ${iconClass}"></i>`;
+}
+
+// Форматирование даты
+function formatDate(dateString) {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString('ru-RU', options);
+}
+
+// Уведомления
+function showAlert(message, type = 'success') {
+    const alertDiv = document.getElementById('meterSuccess');
+    alertDiv.textContent = message;
+    alertDiv.className = `alert alert-${type}`;
+    alertDiv.style.display = 'block';
+    
+    setTimeout(() => {
+        alertDiv.style.display = 'none';
+    }, 3000);
+}
+
+// Дополнительные функции (можно реализовать позже)
+function editMeter(meterId) {
+    console.log('Редактирование прибора', meterId);
+    // Реализация редактирования
+}
+
+async function deleteMeter(meterId) {
+    if (!confirm('Вы уверены, что хотите удалить этот прибор?')) return;
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/meters/${meterId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+        
+        meters = meters.filter(m => m.id !== meterId);
+        renderMeters();
+        showAlert('Прибор успешно удален', 'success');
+    } catch (error) {
+        console.error('Ошибка удаления прибора:', error);
+        showAlert('Ошибка при удалении прибора', 'error');
+    }
+}
+async function populateMeterSelect() {
+    const meterSelect = document.getElementById('meterSelect');
+    
+    try {
+        // Очищаем список перед заполнением
+        meterSelect.innerHTML = '<option value="">-- Выберите прибор --</option>';
+        
+        // Проверяем авторизацию
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+        
+        // Загружаем список приборов
+        const response = await fetch('/api/meters', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        // Обработка ошибки авторизации
+        if (response.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+            return;
+        }
+        
+        // Проверяем успешность запроса
+        if (!response.ok) {
+            throw new Error(`Ошибка HTTP: ${response.status}`);
+        }
+        
+        // Получаем и обрабатываем данные
+        const meters = await response.json();
+        
+        if (!meters || meters.length === 0) {
+            meterSelect.innerHTML = '<option value="">Нет доступных приборов</option>';
+            return;
+        }
+        
+        // Добавляем приборы в выпадающий список
+        meters.forEach(meter => {
+            const option = document.createElement('option');
+            option.value = meter.id;
+            
+            // Форматируем текст для отображения
+            let meterType = '';
+            switch(meter.type) {
+                case 'electricity': meterType = 'Электричество'; break;
+                case 'water': meterType = 'Вода'; break;
+                case 'gas': meterType = 'Газ'; break;
+                default: meterType = meter.type;
+            }
+            
+            option.textContent = `${meterType} (${meter.number})`;
+            option.setAttribute('data-type', meter.type);
+            meterSelect.appendChild(option);
+        });
+        
+    } catch (error) {
+        console.error('Ошибка загрузки приборов:', error);
+        meterSelect.innerHTML = '<option value="">Ошибка загрузки</option>';
+        
+        // Показываем пользователю сообщение об ошибке
+        const errorDiv = document.getElementById('meterError');
+        if (errorDiv) {
+            errorDiv.textContent = 'Не удалось загрузить список приборов';
+            errorDiv.style.display = 'block';
+            setTimeout(() => errorDiv.style.display = 'none', 3000);
+        }
+    }
+}
+
+// Вызываем функцию при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    populateMeterSelect();
+    
+    // Инициализация для обновления при изменении
+    const refreshBtn = document.getElementById('refreshMeters');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', populateMeterSelect);
+    }
+});

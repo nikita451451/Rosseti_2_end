@@ -7,31 +7,6 @@
     <link rel="stylesheet" href="/static/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <style>
-        /* Добавляем стили для плавных переходов */
-        .main-content {
-            transition: opacity 0.3s ease, transform 0.3s ease;
-        }
-
-        .content-section {
-            display: none;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.3s ease, transform 0.3s ease;
-        }
-
-        .content-section.active {
-            display: block;
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        /* Стили для сообщения гостям */
-        .guest-message {
-            text-align: center;
-            margin-top: 100px;
-        }
-    </style>
 </head>
 <body>
     <!-- Шапка с анимацией -->
@@ -58,8 +33,8 @@
                 <i class="fas fa-user-plus btn-icon"></i>
                 <span class="btn-text">Регистрация</span>
             </button>
-            <div id="userPanel" class="user-panel" style="display: none;">
-                <span id="userName" class="user-name"></span>
+            <div id="userPanel" class="user-panel">
+                <span id="userName" class="user-name">Гость</span>
                 <button class="logout-btn" onclick="logout()">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Выйти</span>
@@ -71,8 +46,9 @@
         </div>
     </header>
 
-    <!-- Основной контент с плавным появлением -->
+    <!-- Основной контейнер с улучшенной структурой -->
     <div class="container">
+        <!-- Боковое меню с анимацией -->
         <div class="sidebar">
             <div class="user-info">
                 <div class="avatar">
@@ -86,56 +62,56 @@
             <h2 class="sidebar-title"><i class="fas fa-bars title-icon"></i> Меню</h2>
             <ul class="sidebar-menu">
                 <li class="menu-item">
-                    <a href="#" onclick="showContent('home')" class="menu-link active">
+                    <a href="#!" onclick="showContent('home')" class="menu-link active">
                         <i class="fas fa-home menu-icon"></i>
                         <span class="menu-text">Личный кабинет</span>
                         <i class="fas fa-chevron-right arrow-icon"></i>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="#" onclick="showContent('profile')" class="menu-link">
+                    <a href="#!" onclick="showContent('profile')" class="menu-link">
                         <i class="fas fa-user menu-icon"></i>
                         <span class="menu-text">Профиль</span>
                         <i class="fas fa-chevron-right arrow-icon"></i>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="#" onclick="showContent('submitReadings')" class="menu-link">
+                    <a href="#!" onclick="showContent('submitReadings')" class="menu-link">
                         <i class="fas fa-tachometer-alt menu-icon"></i>
                         <span class="menu-text">Подать показания</span>
                         <i class="fas fa-chevron-right arrow-icon"></i>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="#" onclick="showContent('meters')" class="menu-link">
+                    <a href="#!" onclick="showContent('meters')" class="menu-link">
                         <i class="fas fa-bolt menu-icon"></i>
                         <span class="menu-text">Приборы учёта</span>
                         <i class="fas fa-chevron-right arrow-icon"></i>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="#" onclick="showContent('checkIPU')" class="menu-link">
+                    <a href="#!" onclick="showContent('checkIPU')" class="menu-link">
                         <i class="fas fa-search menu-icon"></i>
                         <span class="menu-text">Проверка ИПУ</span>
                         <i class="fas fa-chevron-right arrow-icon"></i>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="#" onclick="showContent('history')" class="menu-link">
+                    <a href="#!" onclick="showContent('history')" class="menu-link">
                         <i class="fas fa-history menu-icon"></i>
                         <span class="menu-text">История начислений</span>
                         <i class="fas fa-chevron-right arrow-icon"></i>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="#" onclick="showContent('receipt')" class="menu-link">
+                    <a href="#!" onclick="showContent('receipt')" class="menu-link">
                         <i class="fas fa-file-invoice menu-icon"></i>
                         <span class="menu-text">Квитанции</span>
                         <i class="fas fa-chevron-right arrow-icon"></i>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="#" onclick="showContent('certificate')" class="menu-link">
+                    <a href="#!" onclick="showContent('certificate')" class="menu-link">
                         <i class="fas fa-file-alt menu-icon"></i>
                         <span class="menu-text">Справки</span>
                         <i class="fas fa-chevron-right arrow-icon"></i>
@@ -144,223 +120,164 @@
             </ul>
         </div>
 
-        <!-- Сообщение для неавторизованных пользователей -->
-        <div id="guest-message" class="guest-message" style="display: none;">
-            <div class="alert warning">
-                <div class="alert-content">
-                    <i class="fas fa-exclamation-triangle alert-icon"></i>
-                    <div class="alert-text">
-                        <h3>Доступ запрещён</h3>
-                        <p>Для просмотра главной страницы необходимо войти в систему</p>
-                        <div class="alert-buttons">
-                            <a href="/login" class="btn btn-primary">Войти</a>
-                            <a href="/register" class="btn btn-outline">Зарегистрироваться</a>
-                        </div>
-                    </div>
+        <!-- Основное содержимое с улучшенной структурой -->
+        <div class="main-content">
+            <!-- Домашняя страница -->
+            <section id="home-content" class="content-section active">
+                <div class="content-header">
+                    <h2><i class="fas fa-home"></i> Добро пожаловать в личный кабинет</h2>
                 </div>
-            </div>
-        </div>
+                
+                <div style="text-align: center; margin-top: 50px;">
+                    <i class="fas fa-user-circle" style="font-size: 4rem; color: #0066A1; margin-bottom: 20px;"></i>
+                    <h3 id="welcomeHeader">Добро пожаловать!</h3>
+                    <p style="margin-top: 20px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                        Используйте меню слева для навигации по разделам личного кабинета. Здесь вы можете подавать показания счетчиков, проверять статус приборов учета, просматривать историю начислений и выполнять другие действия.
+                    </p>
+                </div>
+            </section>
 
-        <!-- Основной контент -->
-        <div class="main-content" id="main-container">
-            <!-- Контент по умолчанию с анимацией -->
-            <div id="home-content" class="content-section active">
-                <div class="welcome-container">
-                    <h2 id="welcomeHeader" class="welcome-title">Добро пожаловать в личный кабинет</h2>
-                    <div class="welcome-subtitle">Управляйте своими энергопотреблением легко и удобно</div>
-                    
-                    <div class="quick-actions">
-                        <div class="action-card" onclick="showContent('submitReadings')">
-                            <div class="card-icon-container">
-                                <i class="fas fa-tachometer-alt card-icon"></i>
-                            </div>
-                            <h3 class="card-title">Подать показания</h3>
-                            <p class="card-description">Заполните текущие показания ваших приборов учета</p>
-                            <div class="card-arrow">
-                                <i class="fas fa-arrow-right"></i>
-                            </div>
-                        </div>
-                        <div class="action-card" onclick="showContent('receipt')">
-                            <div class="card-icon-container">
-                                <i class="fas fa-file-invoice card-icon"></i>
-                            </div>
-                            <h3 class="card-title">Мои квитанции</h3>
-                            <p class="card-description">Просмотр и оплата счетов за электроэнергию</p>
-                            <div class="card-arrow">
-                                <i class="fas fa-arrow-right"></i>
-                            </div>
-                        </div>
-                        <div class="action-card" onclick="showContent('history')">
-                            <div class="card-icon-container">
-                                <i class="fas fa-history card-icon"></i>
-                            </div>
-                            <h3 class="card-title">История платежей</h3>
-                            <p class="card-description">Архив всех произведенных платежей</p>
-                            <div class="card-arrow">
-                                <i class="fas fa-arrow-right"></i>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Профиль -->
+            <section id="profile-content" class="content-section">
+                <div class="content-header">
+                    <h2><i class="fas fa-user"></i> Профиль пользователя</h2>
                 </div>
-            </div>
-
-            <!-- Другие разделы -->
-            <div id="profile-content" class="content-section">
-                <h2>Профиль пользователя</h2>
-                <div class="profile-info">
-                    <div class="profile-field">
-                        <span class="field-label">Имя:</span>
-                        <span id="profile-name" class="field-value">Загрузка...</span>
-                    </div>
-                    <div class="profile-field">
-                        <span class="field-label">Email:</span>
-                        <span id="profile-email" class="field-value">Загрузка...</span>
-                    </div>
-                    <div class="profile-field">
-                        <span class="field-label">Телефон:</span>
-                        <span id="profile-phone" class="field-value">Загрузка...</span>
-                    </div>
-                    <div class="profile-field">
-                        <span class="field-label">Адрес:</span>
-                        <span id="profile-address" class="field-value">Загрузка...</span>
-                    </div>
+                
+                <div class="alert alert-success" id="profileSuccess" style="display: none;">
+                    Профиль успешно обновлен!
                 </div>
-            </div>
-            
-            <div id="submitReadings-content" class="content-section">
-                <h2>Подача показаний</h2>
-                <div class="reading-form">
-                    <div class="form-group">
-                        <label for="meter-select">Прибор учета:</label>
-                        <select id="meter-select" class="form-control">
-                            <option value="">Выберите прибор учета</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="reading-value">Показания:</label>
-                        <input type="number" id="reading-value" class="form-control" placeholder="Введите текущие показания">
-                    </div>
-                    <div class="form-group">
-                        <label for="reading-date">Дата:</label>
-                        <input type="date" id="reading-date" class="form-control">
-                    </div>
-                    <button id="submit-reading-btn" class="btn btn-primary">Отправить показания</button>
-                </div>
-                <div class="last-readings">
-                    <h3>Последние показания</h3>
-                    <div id="readings-list" class="readings-container"></div>
-                </div>
-            </div>
-            
-            <div id="meters-content" class="content-section">
-                <h2>Приборы учёта</h2>
-                <div id="meters-list" class="cards-container"></div>
-            </div>
-            
-            <div id="checkIPU-content" class="content-section">
-                <h2>Проверка ИПУ</h2>
-                <div class="ipu-check-form">
-                    <div class="form-group">
-                        <label for="meter-number">Номер прибора учета:</label>
-                        <input type="text" id="meter-number" class="form-control" placeholder="Введите серийный номер">
-                    </div>
-                    <button id="check-ipu-btn" class="btn btn-primary">Проверить</button>
-                </div>
-                <div id="ipu-result" class="ipu-result-container">
-                    <div id="ipu-result-content"></div>
-                </div>
-            </div>
-            
-            <div id="history-content" class="content-section">
-                <h2>История начислений</h2>
-                <div class="history-controls">
-                    <div class="form-group">
-                        <label for="history-period">Период:</label>
-                        <select id="history-period" class="form-control">
-                            <option value="1">1 месяц</option>
-                            <option value="3">3 месяца</option>
-                            <option value="6">6 месяцев</option>
-                            <option value="12">1 год</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="history-table-container">
-                    <table class="history-table">
-                        <thead>
-                            <tr>
-                                <th>Дата</th>
-                                <th>Показания</th>
-                                <th>Сумма</th>
-                                <th>Статус</th>
-                            </tr>
-                        </thead>
-                        <tbody id="history-table-body"></tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <div id="receipt-content" class="content-section">
-                <h2>Квитанции</h2>
-                <div class="receipt-controls">
-                    <div class="form-group">
-                        <label for="receipt-period">Период:</label>
-                        <select id="receipt-period" class="form-control">
-                            <option value="1">1 месяц</option>
-                            <option value="3">3 месяца</option>
-                            <option value="6">6 месяцев</option>
-                            <option value="12">1 год</option>
-                        </select>
-                    </div>
-                </div>
-                <div id="receipts-list" class="cards-container"></div>
-            </div>
-            
-            <div id="certificate-content" class="content-section">
-                <h2>Справки</h2>
-                <div class="certificate-cards">
-                    <div class="certificate-card" data-type="consumption">
-                        <i class="fas fa-chart-line card-icon"></i>
-                        <h3>О потреблении</h3>
-                        <p>Справка о потреблении электроэнергии за период</p>
-                    </div>
-                    <div class="certificate-card" data-type="payments">
-                        <i class="fas fa-ruble-sign card-icon"></i>
-                        <h3>О платежах</h3>
-                        <p>Справка о произведенных платежах за период</p>
-                    </div>
-                    <div class="certificate-card" data-type="no-debt">
-                        <i class="fas fa-check-circle card-icon"></i>
-                        <h3>Об отсутствии задолженности</h3>
-                        <p>Справка об отсутствии задолженности</p>
-                    </div>
-                </div>
-                <div id="certificate-form-container" class="certificate-form-container" style="display: none;">
-                    <h3 id="certificate-form-title">Запрос справки</h3>
-                    <form id="certificate-form" class="certificate-form">
-                        <div id="certificate-period-group" class="form-group">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="certificate-start-date">Начальная дата:</label>
-                                    <input type="date" id="certificate-start-date" class="form-control">
-                                </div>
-                                <div class="form-group">
-                                    <label for="certificate-end-date">Конечная дата:</label>
-                                    <input type="date" id="certificate-end-date" class="form-control">
-                                </div>
-                            </div>
-                        </div>
+                
+                <div class="profile-container">
+                    <div class="profile-info">
                         <div class="form-group">
-                            <label for="certificate-email">Email для отправки:</label>
-                            <input type="email" id="certificate-email" class="form-control" required>
+                            <label>ФИО</label>
+                            <input type="text" id="profileName" class="form-control">
                         </div>
-                        <button type="submit" class="btn btn-primary">Запросить справку</button>
-                    </form>
+                        
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="profileEmail" class="form-control">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Телефон</label>
+                            <input type="tel" id="profilePhone" class="form-control">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Адрес</label>
+                            <input type="text" id="profileAddress" class="form-control">
+                        </div>
+                        
+                        <button class="btn-primary" onclick="saveProfile()">
+                            <i class="fas fa-save"></i> Сохранить изменения
+                        </button>
+                    </div>
                 </div>
-            </div>
+            </section>
+
+            <!-- Подача показаний -->
+            <section id="submitReadings-content" class="content-section">
+                <div class="content-header">
+                    <h2><i class="fas fa-tachometer-alt"></i> Подача показаний</h2>
+                </div>
+                
+                <div class="alert alert-success" id="readingSuccess" style="display: none;">
+                    Показания успешно отправлены!
+                </div>
+                
+                <div class="alert alert-error" id="readingError" style="display: none;">
+                    Заполните все поля правильно!
+                </div>
+                
+                <div class="form-group">
+                    <label>Выберите прибор учета</label>
+                    <select id="meterSelect" class="form-control">
+                        <option value="">-- Выберите прибор --</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Текущие показания</label>
+                    <input type="number" id="readingValue" class="form-control" min="1">
+                </div>
+                
+                <div class="form-group">
+                    <label>Дата показаний</label>
+                    <input type="date" id="readingDate" class="form-control">
+                </div>
+                
+                <button class="btn-primary" onclick="submitReading()" id="submitReadingBtn">
+                    <i class="fas fa-paper-plane"></i> Отправить показания
+                </button>
+                
+                <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
+                    <h3>История показаний</h3>
+                    <div style="margin-top: 20px;">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Прибор</th>
+                                    <th>Показания</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody id="readingHistory">
+                                <!-- История показаний будет загружена динамически -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Приборы учета -->
+            <section id="meters-content" class="content-section">
+                <div class="content-header">
+                    <h2><i class="fas fa-bolt"></i> Приборы учёта</h2>
+                    <button class="btn-primary" onclick="showAddMeterForm()">
+                        <i class="fas fa-plus"></i> Добавить прибор
+                    </button>
+                </div>
+                
+                <div id="addMeterForm" style="display: none; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label>Тип прибора</label>
+                        <select id="meterType" class="form-control">
+                            <option value="">-- Выберите тип --</option>
+                            <option value="Электричество">Электричество</option>
+                            <option value="Вода">Вода</option>
+                            <option value="Газ">Газ</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Номер прибора</label>
+                        <input type="text" id="meterNumber" placeholder="Серийный номер">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Дата установки</label>
+                        <input type="date" id="meterInstallDate">
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-primary" onclick="addMeter()">Сохранить</button>
+                        <button class="btn-danger" onclick="cancelAddMeter()">Отмена</button>
+                    </div>
+                </div>
+                
+                <div class="alert alert-success" id="meterSuccess" style="display: none;"></div>
+                
+                <div class="meter-grid" id="metersGrid">
+                    <!-- Приборы будут загружены динамически -->
+                </div>
+            </section>
+
         </div>
     </div>
-    
-    <!-- Подвал с анимацией -->
+
+    <!-- Подвал -->
     <footer class="footer">
         <div class="footer-container">
             <div class="footer__info">
@@ -368,98 +285,12 @@
                     <img src="/static/images/logo-white.png" alt="Россети">
                     <span>Россети</span>
                 </div>
-                <p class="footer-text">© 2025 Россети. Все права защищены.</p>
-                <p class="footer-text"><i class="fas fa-map-marker-alt footer-icon"></i> Москва, ул. Примерная, д. 1</p>
-                <p class="footer-text"><i class="fas fa-phone footer-icon"></i> +7 (495) 123-45-67</p>
-                
-                <div class="social-links">
-                    <a href="#" class="social-link"><i class="fab fa-vk"></i></a>
-                    <a href="#" class="social-link"><i class="fab fa-telegram"></i></a>
-                    <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
-                </div>
+                <p class="footer-text">© 2023 Россети. Все права защищены.</p>
             </div>
-            <div class="footer__links">
-                <div class="links-column">
-                    <h4 class="links-title">Компания</h4>
-                    <a href="#" class="footer-link">О нас</a>
-                    <a href="#" class="footer-link">Руководство</a>
-                    <a href="#" class="footer-link">Пресс-центр</a>
-                </div>
-                <div class="links-column">
-                    <h4 class="links-title">Клиентам</h4>
-                    <a href="#" class="footer-link">Услуги</a>
-                    <a href="#" class="footer-link">Тарифы</a>
-                    <a href="#" class="footer-link">Документы</a>
-                </div>
-                <div class="links-column">
-                    <h4 class="links-title">Контакты</h4>
-                    <a href="#" class="footer-link">Офисы</a>
-                    <a href="#" class="footer-link">Телефоны</a>
-                    <a href="#" class="footer-link">Обратная связь</a>
-                </div>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <a href="#" class="footer-legal">Политика конфиденциальности</a>
-            <a href="#" class="footer-legal">Пользовательское соглашение</a>
         </div>
     </footer>
 
-    <!-- JavaScript с улучшенными анимациями -->
-    <script>
-        // Анимация клика по кнопкам
-        document.querySelectorAll('button').forEach(button => {
-            button.addEventListener('click', function(e) {
-                // Эффект волны
-                const ripple = document.createElement('span');
-                ripple.classList.add('ripple-effect');
-                const rect = this.getBoundingClientRect();
-                const size = Math.max(rect.width, rect.height);
-                const x = e.clientX - rect.left - size/2;
-                const y = e.clientY - rect.top - size/2;
-                
-                ripple.style.width = ripple.style.height = `${size}px`;
-                ripple.style.left = `${x}px`;
-                ripple.style.top = `${y}px`;
-                this.appendChild(ripple);
-                
-                setTimeout(() => {
-                    ripple.remove();
-                }, 600);
-            });
-        });
-
-        // Плавная прокрутка к якорям
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    window.scrollTo({
-                        top: target.offsetTop - 80,
-                        behavior: 'smooth'
-                    });
-                }
-            });
-        });
-
-        // Анимация при загрузке страницы
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                document.body.classList.add('loaded');
-                
-                // Анимация появления элементов
-                const animatedElements = document.querySelectorAll('.sidebar, .header, .footer');
-                animatedElements.forEach((el, index) => {
-                    setTimeout(() => {
-                        el.style.opacity = 1;
-                        el.style.transform = 'translateY(0)';
-                    }, 100 * index);
-                });
-            }, 200);
-        });
-    </script>
-    <!-- Внешние скрипты -->
+    <!-- Подключение JavaScript -->
     <script src="/static/script.js"></script>
 </body>
 </html>

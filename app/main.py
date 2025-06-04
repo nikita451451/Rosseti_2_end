@@ -5,15 +5,17 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from jose import JWTError
+import jwt
 from pydantic import BaseModel
-from sqlalchemy import text
+from sqlalchemy import Date, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from datetime import date, timedelta
 from typing import List, Optional
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from app.schemas import Meter, Reading, UserCreate  
-# Импортируем модели правильно:
+
 from app.models import Base, Meter as MeterModel, Reading as ReadingModel, User  # SQLAlchemy-модели
 from app.schemas import MeterCreate, ReadingCreate, UserCreate, UserResponse, Meter as MeterSchema, Reading as ReadingSchema  # Pydantic-схемы
 from app.database import get_db
@@ -27,6 +29,9 @@ from app.auth import (
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
 from app.config import settings
+from sqlalchemy import DECIMAL, Column, Date, ForeignKey, Integer, String, DateTime, UniqueConstraint, func
+from sqlalchemy.ext.declarative import declarative_base
+from bacup.auth import ALGORITHM, SECRET_KEY, oauth2_scheme
 
 app = FastAPI(prefix="/api")
 # Шаблоны и статические файлы
@@ -121,8 +126,11 @@ async def login_for_access_token(
     
     return {"access_token": access_token, "token_type": "bearer"}
 
-@app.get("/user/me", response_model=UserResponse)
-async def read_users_me(current_user: User = Depends(get_current_user)):
+@app.get("/users/me", response_model=UserResponse)
+async def read_user_me(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
     return current_user
 # Эндпоинты аутентификации
 @app.post("/register")
@@ -170,11 +178,36 @@ async def login_for_access_token(
     )
     
     return {"access_token": access_token, "token_type": "bearer"}
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
 
+class UserResponse(BaseModel):
+    username: str
+    email: str
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    
+    class Config:
+        orm_mode = True
 @app.get("/users/me", response_model=UserResponse)
-async def read_users_me(current_user: User = Depends(get_current_user)):
+async def read_user_me(current_user: User = Depends(get_current_user)):
     return current_user
-
+@app.patch("/users/me", response_model=UserResponse)
+async def update_user_me(
+    user_data: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    # Обновляем только переданные поля
+    for field, value in user_data.dict(exclude_unset=True).items():
+        setattr(current_user, field, value)
+    
+    await db.commit()
+    await db.refresh(current_user)
+    return current_user
 # Подключаем статические файлы
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
@@ -352,6 +385,17 @@ async def validate_token(current_user: User = Depends(get_current_user)):
             "username": current_user.username
         }
     }
+@app.get("/auth/validate-token")
+async def validate_token(token: str = Depends(oauth2_scheme)):
+    try:
+        # Ваша логика валидации токена
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=400, detail="Invalid token")
+        return {"valid": True}
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Invalid token")
 @app.exception_handler(404)
 async def not_found(request: Request, exc):
     return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
@@ -626,3 +670,4 @@ async def create_reading(
     await db.commit()
     await db.refresh(db_reading)
     return db_reading
+

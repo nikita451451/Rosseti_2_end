@@ -28,9 +28,20 @@ class MeterBase(BaseModel):
     type: str
     installed_at: date
 
-class MeterCreate(MeterBase):
-    pass
-
+class MeterCreate(BaseModel):
+    number: str
+    type: str
+    installed_at: date
+    
+class MeterSchema(BaseModel):
+    id: int
+    user_id: int
+    number: str
+    type: str
+    installed_at: date
+    
+    class Config:
+        orm_mode = True
 class Meter(MeterBase):
     id: int
     user_id: int
