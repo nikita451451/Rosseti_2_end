@@ -671,3 +671,10 @@ async def create_reading(
     await db.refresh(db_reading)
     return db_reading
 
+if __name__ == "__main__":
+    uvicorn.run(
+        app, 
+        host="0.0.0.0",  # Слушаем все интерфейсы
+        port=8000,
+        reload=True
+    )

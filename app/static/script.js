@@ -304,79 +304,111 @@ document.addEventListener('DOMContentLoaded', () => {
 // ====================== Функции приборов учета ======================
 async function loadMeters() {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/meters`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-        
-        if (!response.ok) throw new Error('Ошибка загрузки приборов');
-        
-        const meters = await response.json();
-        const metersList = document.getElementById('meters-list');
-        const meterSelect = document.getElementById('meter-select');
-        
-        metersList.innerHTML = '';
-        meterSelect.innerHTML = '';
-        
-        if (meters.length === 0) {
-            metersList.innerHTML = '<div class="empty-message">У вас нет зарегистрированных приборов учета</div>';
-            meterSelect.innerHTML = '<option value="">Нет доступных приборов</option>';
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
             return;
         }
-        
-        meters.forEach(meter => {
-            const option = document.createElement('option');
-            option.value = meter.id;
-            option.textContent = `${meter.type} (${meter.serial_number})`;
-            meterSelect.appendChild(option);
 
-            const meterCard = document.createElement('div');
-            meterCard.className = 'meter-card';
-            meterCard.innerHTML = `
-                <div class="meter-header">
-                    <h3>${meter.type}</h3>
-                    <span class="meter-status ${meter.is_active ? 'active' : 'inactive'}">
-                        ${meter.is_active ? 'Активен' : 'Неактивен'}
-                    </span>
-                </div>
-                <div class="meter-details">
-                    <div class="detail-row">
-                        <span>Серийный номер:</span>
-                        <span>${meter.serial_number}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span>Дата установки:</span>
-                        <span>${new Date(meter.installation_date).toLocaleDateString()}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span>Последние показания:</span>
-                        <span>${meter.last_reading || 'Нет данных'}</span>
-                    </div>
-                </div>
-                <div class="meter-actions">
-                    <button class="action-btn edit-btn" data-id="${meter.id}">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="action-btn delete-btn" data-id="${meter.id}">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `;
-            metersList.appendChild(meterCard);
+        const response = await fetch(`${API_BASE_URL}/api/meters`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
         });
-        
+
+        if (response.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error('Ошибка загрузки приборов');
+        }
+
+        meters = await response.json(); // Заполняем глобальную переменную
+        renderMeters();
+        populateMeterSelect();
     } catch (error) {
-        console.error('Meters load error:', error);
-        showError('Не удалось загрузить список приборов');
+        console.error('Ошибка загрузки приборов:', error);
+        showError('Не удалось загрузить приборы учета');
     }
 }
 
+function renderMeters() {
+    const metersList = document.getElementById('meters-list');
+    if (!metersList) return;
+
+    metersList.innerHTML = '';
+    
+    if (meters.length === 0) {
+        metersList.innerHTML = '<div class="empty-message">У вас нет зарегистрированных приборов учета</div>';
+        return;
+    }
+    
+    meters.forEach(meter => {
+        const meterCard = document.createElement('div');
+        meterCard.className = 'meter-card';
+        meterCard.innerHTML = `
+            <div class="meter-header">
+                <h3>${meter.type}</h3>
+                <span class="meter-status ${meter.is_active ? 'active' : 'inactive'}">
+                    ${meter.is_active ? 'Активен' : 'Неактивен'}
+                </span>
+            </div>
+            <div class="meter-details">
+                <div class="detail-row">
+                    <span>Серийный номер:</span>
+                    <span>${meter.serial_number}</span>
+                </div>
+                <div class="detail-row">
+                    <span>Дата установки:</span>
+                    <span>${new Date(meter.installation_date).toLocaleDateString()}</span>
+                </div>
+            </div>
+            <div class="meter-actions">
+                <button class="action-btn edit-btn" data-id="${meter.id}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn delete-btn" data-id="${meter.id}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        metersList.appendChild(meterCard);
+    });
+}
+
+function populateMeterSelect() {
+    const meterSelect = document.getElementById('meter-select');
+    if (!meterSelect) return;
+    
+    meterSelect.innerHTML = '<option value="">Выберите прибор учета</option>';
+    
+    meters.forEach(meter => {
+        const option = document.createElement('option');
+        option.value = meter.id;
+        option.textContent = `${meter.type} (${meter.serial_number})`;
+        meterSelect.appendChild(option);
+    });
+}
+
+
 // ====================== Функции показаний ======================
 async function submitReading() {
-    const meterId = document.getElementById('meter-select').value;
-    const value = document.getElementById('reading-value').value;
-    const date = document.getElementById('reading-date').value;
+    const meterSelect = document.getElementById('meter-select');
+    const readingValue = document.getElementById('reading-value');
+    const readingDate = document.getElementById('reading-date');
+    
+    // Проверка существования элементов
+    if (!meterSelect || !readingValue || !readingDate) {
+        console.error('Один из элементов формы не найден');
+        return;
+    }
+    
+    const meterId = meterSelect.value;
+    const value = readingValue.value;
+    const date = readingDate.value;
     
     if (!meterId || !value || !date) {
         showError('Заполните все поля');
@@ -399,49 +431,12 @@ async function submitReading() {
         
         if (!response.ok) throw new Error('Ошибка отправки показаний');
         
-        const result = await response.json();
         showSuccess('Показания успешно отправлены');
+        readingValue.value = '';
         loadLastReadings(meterId);
-        document.getElementById('reading-value').value = '';
-        
     } catch (error) {
         console.error('Submit reading error:', error);
         showError('Не удалось отправить показания');
-    }
-}
-
-async function loadLastReadings(meterId) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/readings?meter_id=${meterId}&limit=5`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-        
-        if (!response.ok) throw new Error('Ошибка загрузки показаний');
-        
-        const readings = await response.json();
-        const readingsList = document.getElementById('readings-list');
-        readingsList.innerHTML = '';
-        
-        if (readings.length === 0) {
-            readingsList.innerHTML = '<div class="empty-message">Нет данных о показаниях</div>';
-            return;
-        }
-        
-        readings.forEach(reading => {
-            const readingItem = document.createElement('div');
-            readingItem.className = 'reading-item';
-            readingItem.innerHTML = `
-                <span class="reading-date">${new Date(reading.date).toLocaleDateString()}</span>
-                <span class="reading-value">${reading.value}</span>
-            `;
-            readingsList.appendChild(readingItem);
-        });
-        
-    } catch (error) {
-        console.error('Readings load error:', error);
-        showError('Не удалось загрузить историю показаний');
     }
 }
 
@@ -598,73 +593,6 @@ document.addEventListener('DOMContentLoaded', () => {
 window.meters = [];
 // Загружаем список приборов учета
 // Функция загрузки приборов
-async function loadMeters() {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        window.location.href = '/login';
-        return;
-      }
-  
-      const response = await fetch('/api/meters', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-  
-      if (response.status === 401) {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
-        return;
-      }
-  
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-  
-      return await response.json();
-    } catch (error) {
-      console.error('Meters load error:', error);
-      showErrorNotification('Ошибка загрузки приборов');
-    }
-  }
-        
-        meters.forEach(meter => {
-            // Добавляем в выпадающий список
-            const option = document.createElement('option');
-            option.value = meter.id;
-            option.textContent = `${meter.type} (${meter.number})`;
-            meterSelect.appendChild(option);
-            
-            // Добавляем карточку прибора
-            const meterCard = document.createElement('div');
-            meterCard.className = 'meter-card';
-            meterCard.innerHTML = `
-                <div class="meter-header">
-                    <h3>${meter.type}</h3>
-                </div>
-                <div class="meter-details">
-                    <div class="detail-row">
-                        <span>Номер:</span>
-                        <span>${meter.number}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span>Дата установки:</span>
-                        <span>${new Date(meter.installed_at).toLocaleDateString()}</span>
-                    </div>
-                </div>
-                <div class="meter-actions">
-                    <button class="action-btn edit-btn" onclick="editMeter(${meter.id})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="action-btn delete-btn" onclick="deleteMeter(${meter.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `;
-            metersList.appendChild(meterCard);
-        });
         
 // ===== Форма добавления прибора =====
 function showAddMeterForm() {
@@ -731,7 +659,41 @@ async function addMeter() {
         showAlert(error.message || 'Ошибка при добавлении прибора', 'error');
     }
 }
-
+meters.forEach(meter => {
+    // Добавляем в выпадающий список
+    const option = document.createElement('option');
+    option.value = meter.id;
+    option.textContent = `${meter.type} (${meter.number})`;
+    meterSelect.appendChild(option);
+    
+    // Добавляем карточку прибора
+    const meterCard = document.createElement('div');
+    meterCard.className = 'meter-card';
+    meterCard.innerHTML = `
+        <div class="meter-header">
+            <h3>${meter.type}</h3>
+        </div>
+        <div class="meter-details">
+            <div class="detail-row">
+                <span>Номер:</span>
+                <span>${meter.number}</span>
+            </div>
+            <div class="detail-row">
+                <span>Дата установки:</span>
+                <span>${new Date(meter.installed_at).toLocaleDateString()}</span>
+            </div>
+        </div>
+        <div class="meter-actions">
+            <button class="action-btn edit-btn" onclick="editMeter(${meter.id})">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="action-btn delete-btn" onclick="deleteMeter(${meter.id})">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `;
+    metersList.appendChild(meterCard);
+});
 // ===== Вспомогательные функции =====
 function getMeterIcon(type) {
     const icons = {
@@ -951,7 +913,13 @@ function checkAuthAndLoadMeters() {
     }
     loadMeters();
 }
-
+document.addEventListener('DOMContentLoaded', () => {
+    updateUI();
+    loadMeters();
+    
+    // Установите сегодняшнюю дату по умолчанию
+    document.getElementById('readingDate').valueAsDate = new Date();
+});
 // Показать форму добавления
 function showAddMeterForm() {
     document.getElementById('addMeterForm').style.display = 'block';
@@ -1007,7 +975,17 @@ async function addMeter() {
         showAlert('Ошибка при добавлении прибора', 'error');
     }
 }
-
+function populateMeterSelect(meters) {
+    const select = document.getElementById('meter-select');
+    select.innerHTML = '<option value="">-- Выберите прибор --</option>';
+    
+    meters.forEach(meter => {
+        const option = document.createElement('option');
+        option.value = meter.id;
+        option.textContent = `${meter.type} (${meter.number})`;
+        select.appendChild(option);
+    });
+}
 async function loadMeters() {
     try {
         const token = localStorage.getItem('token');
@@ -1247,3 +1225,5 @@ document.addEventListener('DOMContentLoaded', () => {
         refreshBtn.addEventListener('click', populateMeterSelect);
     }
 });
+console.log('Токен:', localStorage.getItem('token'));
+console.log('Ответ API:', response);

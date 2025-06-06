@@ -302,40 +302,7 @@ body {
     font-size: 20px;
 }
 
-/* Подвал */
-.footer {
-    background-color: var(--primary-color);
-    color: white;
-    padding: 30px;
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 20px;
-}
 
-.footer__info p {
-    margin-bottom: 10px;
-    font-size: 14px;
-}
-
-.footer__links {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.footer__links a {
-    color: white;
-    text-decoration: none;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.footer__links a:hover {
-    text-decoration: underline;
-}
 
 /* Адаптивность */
 @media (max-width: 992px) {
