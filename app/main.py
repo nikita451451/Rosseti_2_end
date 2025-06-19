@@ -485,17 +485,17 @@ async def init_db(db: AsyncSession):
     
     await db.commit()
 
-@app.on_event("startup")
-async def on_startup():
+#@app.on_event("startup")
+#async def on_startup():
     # Получаем асинхронный генератор
-    db_gen = get_db()
-    try:
+   # db_gen = get_db()
+   # try:
         # Получаем сессию из генератора
-        db = await anext(db_gen)
-        await init_db(db)
-    finally:
-        # Закрываем генератор
-        await db_gen.aclose()
+    #    db = await anext(db_gen)
+   #     await init_db(db)
+   # finally:
+   #     # Закрываем генератор
+   #     await db_gen.aclose()
 
 @app.get("/api/menu", response_model=List[MenuItemResponse])
 async def get_menu(
